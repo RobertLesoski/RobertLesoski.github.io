@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" role="img" aria-label="Conceptual regime map: CAPE on the horizontal axis and 0 to 6 kilometer bulk shear on the vertical axis, with the high-shear low-CAPE region shaded.">
+  <rect width="1000" height="560" fill="#0e121b"/>
+  <g font-family="ui-monospace,Consolas,monospace">
+    <!-- regime fills -->
+    <rect x="100" y="30" width="860" height="420" fill="#121723"/>
+    <rect x="320" y="30" width="640" height="220" fill="#4cc9f0" fill-opacity=".10"/>
+    <rect x="320" y="250" width="640" height="200" fill="#3ddc97" fill-opacity=".08"/>
+    <rect x="100" y="250" width="220" height="200" fill="#6b768c" fill-opacity=".10"/>
+    <rect x="100" y="30" width="220" height="220" fill="#ff5468" fill-opacity=".22" stroke="#ff5468" stroke-width="3" stroke-dasharray="9 6"/>
+    <!-- axes -->
+    <line x1="100" y1="30" x2="100" y2="450" stroke="#3a4560" stroke-width="2"/>
+    <line x1="100" y1="450" x2="960" y2="450" stroke="#3a4560" stroke-width="2"/>
+    <g font-size="16" fill="#98a3b8">
+      <text x="100" y="474" text-anchor="middle">0</text><text x="320" y="474" text-anchor="middle">1000</text><text x="535" y="474" text-anchor="middle">2000</text><text x="750" y="474" text-anchor="middle">3000</text><text x="960" y="474" text-anchor="middle">4000</text>
+      <text x="92" y="456" text-anchor="end">0</text><text x="92" y="351" text-anchor="end">10</text><text x="92" y="246" text-anchor="end">20</text><text x="92" y="141" text-anchor="end">30</text><text x="92" y="40" text-anchor="end">40</text>
+    </g>
+    <text x="530" y="508" font-size="18" fill="#c9d3e6" text-anchor="middle">CAPE (J/kg)  →  more instability</text>
+    <text transform="translate(34,240) rotate(-90)" font-size="18" fill="#c9d3e6" text-anchor="middle">0–6 km shear (m/s)  →</text>
+    <!-- HSLC -->
+    <text x="116" y="66" font-size="26" font-weight="700" fill="#ff5468">HSLC</text>
+    <g font-size="16" fill="#e7eaf1"><text x="116" y="94">high shear,</text><text x="116" y="114">low CAPE</text></g>
+    <g font-size="16" fill="#ffb454"><text x="116" y="150">Southeast U.S.</text><text x="116" y="170">QLCS, quick</text><text x="116" y="190">tornadoes</text></g>
+    <g font-size="15" fill="#ffd9dd"><text x="116" y="224">ZDR lead time?</text></g>
+    <!-- other regimes -->
+    <text x="344" y="66" font-size="22" font-weight="700" fill="#4cc9f0">High shear + high CAPE</text>
+    <text x="344" y="92" font-size="16" fill="#c9d3e6">long-lived supercells, large hail</text>
+    <text x="344" y="290" font-size="22" font-weight="700" fill="#3ddc97">Low shear + high CAPE</text>
+    <text x="344" y="316" font-size="16" fill="#c9d3e6">pulse and multicell storms, heavy rain</text>
+    <text x="116" y="290" font-size="18" font-weight="700" fill="#98a3b8">Low / low</text>
+    <text x="116" y="314" font-size="15" fill="#8794ad">weak convection</text>
+    <text x="100" y="545" font-size="15" fill="#8794ad">Conceptual regime map. Boundaries are approximate and vary by definition. Not data.</text>
+  </g>
+</svg>

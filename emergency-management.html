@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Training the NWP Lab &amp; Flood Model for Emergency Management | Robert G. Lesoski</title>
+<meta name="description" content="A readiness ladder for taking a CM1 severe-storm program and a GPU flood model of Warren County, KY from research prototype toward emergency-management decision support, with evidence, gaps and guardrails.">
+<link rel="canonical" href="https://robertlesoski.github.io/emergency-management.html">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0a0d14">
+<meta property="og:image" content="https://robertlesoski.github.io/assets/img/og-card.jpg">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="assets/css/site.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">robert<b>.</b>lesoski</a>
+    <nav class="nav" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="flood.html">Flood model</a>
+      <a href="nwp-lab.html">NWP lab</a>
+      <a href="emergency-management.html" aria-current="page">Emergency mgmt</a>
+      <a href="knowledge-base.html">Knowledge base</a>
+    </nav>
+    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle theme">☾</button>
+  </div>
+</header>
+
+<div class="page-hero">
+  <div class="wrap">
+    <div class="crumb">home / emergency management</div>
+    <p class="eyebrow">Decision support · readiness · guardrails</p>
+    <h1 style="font-size:clamp(30px,4.4vw,46px)">Training the NWP Lab and the Warren County flood model for emergency management</h1>
+    <p class="lede" style="margin-bottom:0">Two models, one destination: information a county emergency manager can act on. This page lays out the ladder I'm climbing, what evidence I have at each rung, and what I will not claim until I've earned it.</p>
+  </div>
+</div>
+
+<main id="main" class="wrap" style="padding-top:36px">
+<div class="with-toc">
+<aside class="toc" aria-label="On this page">
+  <a href="#meaning">What "training" means</a>
+  <a href="#loop">The training loop</a>
+  <a href="#ladder">Readiness ladder</a>
+  <a href="#nwp">Track 1 · NWP Lab</a>
+  <a href="#flood">Track 2 · Flood model</a>
+  <a href="#bridge">The bridge</a>
+  <a href="#gates">Outputs &amp; guardrails</a>
+  <a href="#data">Validation data</a>
+  <a href="#em-questions">Questions for EM</a>
+  <a href="#next">Proposed next steps</a>
+</aside>
+
+<div>
+
+<section id="meaning" style="padding-top:0">
+  <div class="callout"><strong>Honest status.</strong> The flood depths and risk tiers are research-model output and are <strong>not validated</strong>. Nothing on this site is for safety, insurance, engineering or emergency decisions. Today the right uses are research, education and tabletop-style scenario discussion. Official flood information comes from FEMA, NWS and local authorities.</div>
+  <div class="sec-head"><p class="eyebrow">Framing</p><h2>What "training" means here</h2></div>
+  <p>I use "training" in the practitioner's sense: the full cycle by which a numerical model earns trust. For both tracks that means <strong>learning</strong> the physics, <strong>building</strong> the tooling, <strong>verifying</strong> that the code computes what it claims, <strong>validating</strong> against observations, <strong>calibrating</strong> the free parameters, <strong>coupling</strong> the pieces into one forecast-to-impact chain, and finally <strong>handing off</strong> to the people who make decisions, then feeding their feedback back in.</p>
+  <ul class="tight">
+    <li><strong>Track 1: NWP Lab.</strong> Severe-convection modeling with Bryan's Cloud Model 1 (CM1): the storm environment and processes that decide where hazardous rain, wind and rotation occur.</li>
+    <li><strong>Track 2: Warren County flooding.</strong> A GPU shallow-water model that converts rainfall into depth on roads, buildings and facilities across Bowling Green and the county.</li>
+    <li><strong>The target user:</strong> local emergency management (county / city), who need <em>where</em>, <em>how deep</em>, <em>how sure</em> and <em>what's affected</em>, in a form they can use under time pressure.</li>
+  </ul>
+  <figure class="fig reveal" style="margin:0 0 22px">
+    <img src="assets/img/neighborhood-exposure.webp" width="1440" height="810" loading="lazy" decoding="async" alt="Residential neighborhood in 3-D with simulated ponding, buildings tinted by depth tier and roads with flooded segments in orange">
+    <figcaption><b>What an EM product looks like today.</b> Buildings tinted by simulated depth tier and road segments flagged where depth crosses a threshold, 25-year storm, hour 12. This is exactly the kind of view that must not be mistaken for a forecast: the depths are unvalidated. <span class="credit">Contains data © OpenStreetMap contributors.</span></figcaption>
+  </figure>
+  <div class="callout info"><strong>Scope note.</strong> The items marked <span class="pill done">done</span> are documented in the public repository or my vault. Items marked <span class="pill plan">plan</span> are intentions, not results. I have not claimed any operational use or partner adoption.</div>
+</section>
+
+<section id="loop">
+  <div class="sec-head"><p class="eyebrow">Method</p><h2>The training loop</h2></div>
+  <ol class="steps reveal" aria-label="Seven-stage training loop">
+    <li class="step cool"><b>1 · Learn</b><span>vault notes, CM1 docs, hydrology texts</span></li>
+    <li class="step cool"><b>2 · Build</b><span>solver, viewers, namelists, tools</span></li>
+    <li class="step cool"><b>3 · Verify</b><span>mass balance, tile hashes, unit guards</span></li>
+    <li class="step hot"><b>4 · Validate</b><span>against observed events (ev4 …)</span></li>
+    <li class="step"><b>5 · Calibrate</b><span>curve number, Manning n, leave-one-out</span></li>
+    <li class="step"><b>6 · Couple</b><span>NWP rain into the flood solver</span></li>
+    <li class="step"><b>7 · Hand off</b><span>EM co-design and guardrails</span></li>
+  </ol>
+  <p class="note">↺ Feedback from emergency managers (what they need, what failed, what was unclear) returns to step 1. <strong>Flood model:</strong> steps 1–3 done, first pass of 4. <strong>NWP lab:</strong> curriculum and reference (1–2) done; experiments (3–5) planned.</p>
+</section>
+
+<section id="ladder">
+  <div class="sec-head"><p class="eyebrow">Evidence-based status</p><h2>Readiness ladder</h2>
+    <p class="muted">Each rung has to hold before the next one means anything. My current position on the flood model is <strong>L3 complete, L4 only weakly</strong>: verified and plausible, with weak observational evidence.</p></div>
+  <ol class="ladder">
+    <li><div><h3>Numerically sound <span class="pill done">done</span></h3><p>The solver conserves mass, respects its stability limit, and refuses absurd inputs.</p><span class="ev">evidence: mass-balance error 2.2 × 10⁻⁹ % (2-yr county) · CFL α = 0.3 · aborts above 600 mm/h · DEM datum check &gt; 3 m · grid ≤ 150 M cells</span></div></li>
+    <li><div><h3>Traceable and reproducible <span class="pill done">done</span></h3><p>Every storm has a provenance record; unverified items are marked "not verified" instead of omitted; delivery files are hash-checked.</p><span class="ev">evidence: 324/324 COG files byte-identical to the Vista set · COG error ≤ 1 cm over 22,421 points · per-storm source and limits shown in the viewer</span></div></li>
+    <li><div><h3>Plausible under design rainfall <span class="pill done">done</span></h3><p>Twelve storms run for the whole county; design depths agree with NOAA Atlas 14; runoff volume matches the SCS calculation.</p><span class="ev">evidence: 6 design storms within 3 % of Atlas 14 · 2-yr runoff 33.2 mm of 88.9 mm · 12 storms × 26 rasters</span></div></li>
+    <li><div><h3>Some skill against observed flooding <span class="pill limit">weak</span></h3><p>The model flags roads that officials reported flooded far more often than random roads, but this is not depth validation.</p><span class="ev">evidence: April 2025 replay, 16/21 reported roads ≥ 30 cm vs 27/100 random · AUC ≈ 0.84 · replay used ~½ of real rain · no upstream inflow</span></div></li>
+    <li><div><h3>Calibrated <span class="pill plan">plan</span></h3><p>Free parameters (curve number, Manning n, outflow slope) constrained by observations, tested on events not used for fitting.</p><span class="ev">approach: leave-one-out across the 6 historical gauge events · land-cover-based roughness (NLCD) instead of one flat value</span></div></li>
+    <li><div><h3>Hydraulically complete <span class="pill plan">plan</span></h3><p>The mechanisms that drive Warren County's real floods are represented: river inflow, storm drains, karst drainage.</p><span class="ev">gaps from the repo's own limits: Barren River inflow · storm drains · sinkhole / karst conduits · ~10 m terrain outside the city</span></div></li>
+    <li><div><h3>Forced by real rainfall, with uncertainty <span class="pill plan">plan</span></h3><p>Spatially varying radar / model rainfall instead of one gauge; ensembles turned into exceedance probabilities rather than a single depth.</p><span class="ev">approach: gridded rainfall → solver source term · N members → P(depth ≥ 30 cm) maps · CM1 process studies for the storm regimes that matter locally</span></div></li>
+    <li><div><h3>Co-designed with emergency managers <span class="pill plan">plan</span></h3><p>Thresholds, formats and lead times set by the people who will use them; clear rules for when a product may and may not be used.</p><span class="ev">approach: structured questions (below) · tabletop exercises · written guardrails per output</span></div></li>
+  </ol>
+</section>
+
+<section id="nwp">
+  <div class="sec-head"><p class="eyebrow">Track 1</p><h2>NWP Lab: preparing the severe-storm modeling for EM relevance</h2>
+    <p class="muted">The flood model is only as useful as the rainfall that drives it, and EM also cares about wind, tornadoes and lightning. The NWP Lab track builds the atmospheric side: first knowledge, then controlled experiments.</p></div>
+
+  <h3>1. Curriculum mapped onto model controls <span class="pill done">done</span></h3>
+  <p class="muted">My 10-chapter vault (324 notes, 2,654 wikilinks) is organized so each concept lands on something I can set or read in CM1. Full reference: <a href="knowledge-base.html">knowledge base</a> and the <a href="nwp-lab.html#namelist">namelist explorer</a>.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Concept (vault)</th><th>What I learn to control</th><th>CM1 handle</th></tr></thead>
+    <tbody>
+      <tr><td>Stability, lapse rates, CAPE / CIN, LCL / LFC / EL (Ch 5)</td><td>Build a thermodynamic environment with a target instability</td><td class="mono">isnd=7 · input_sounding · output_cape/cin/lcl/lfc</td></tr>
+      <tr><td>Bulk shear, SRH, STP, SCP (Ch 5)</td><td>Set the hodograph and check composite parameters</td><td class="mono">input_sounding winds · output_uh</td></tr>
+      <tr><td>Precipitation processes: collision-coalescence, Bergeron-Findeisen (Ch 5)</td><td>Choose how rain and ice are represented</td><td class="mono">ptype 5 / 26 / 27 · ccn · output_dbz</td></tr>
+      <tr><td>Forces, geostrophic and gradient wind (Ch 6)</td><td>Dynamics and numerics choices</td><td class="mono">psolver · icor/fcor · lspgrad · bbc</td></tr>
+      <tr><td>Fronts, air masses, cold pools (Ch 8)</td><td>Initiate and organize convection</td><td class="mono">iinit 2 / 3 / 14 · testcase 18</td></tr>
+      <tr><td>Forecasting and NWP (Ch 9)</td><td>Ensembles, resolution, verification thinking</td><td class="mono">irandp · numrand · dx/dz · restarts</td></tr>
+      <tr><td>Squall lines, QLCS, tornadoes (Ch 10)</td><td>Track hazards inside the simulation</td><td class="mono">output_vort/svs · output_sws · output_rain · testcase 17</td></tr>
+    </tbody></table></div>
+
+  <h3 style="margin-top:26px">2. Research questions <span class="pill plan">plan</span></h3>
+  <ol class="tight">
+    <li><strong>Do ZDR columns carry usable lead time in high-shear, low-CAPE (HSLC) environments</strong> typical of the Southeast, where instability is low but shear is large?</li>
+    <li><strong>Which simulated behavior is closest to reality?</strong> Compare findings with actual radar observations and with higher-complexity models.</li>
+    <li><strong>Can other dual-polarization features</strong> improve real-time tracking and forecasting of QLCS evolution and severe hazards?</li>
+    <li><strong>Real-event reconstructions:</strong> simulate specific events, such as a derecho case, and run tornado cases at high detail, since a single machine can run more than one.</li>
+  </ol>
+
+  <h3 style="margin-top:26px">3. Experiment ladder <span class="pill plan">plan</span></h3>
+  <div class="grid g2">
+    <div class="card"><div class="kicker">Stage A · Idealized</div><p>Warm-bubble or line-of-bubbles initiation (<code>iinit</code> 1 / 3) on a sounding file. Establish a baseline storm and confirm numerics: advection order and diffusion pairing, <code>cfl_limit</code> 1.0, <code>stat_cfl</code> clean.</p></div>
+    <div class="card"><div class="kicker">Stage B · Sensitivity sweep</div><p>Vary CAPE (moisture profile) and 0–6 km shear (hodograph) independently across the HSLC regime; compare microphysics (<code>ptype</code> 5 vs 26 / 27), spacing and <code>ccn</code>.</p></div>
+    <div class="card"><div class="kicker">Stage C · Ensemble</div><p>Perturb initial conditions with <code>irandp</code> and member index <code>numrand</code>; report spread, not a single run. Use parcels (<code>iprcl</code>) for updraft source analysis.</p></div>
+    <div class="card"><div class="kicker">Stage D · Real events</div><p>Initialize from observed soundings or analyses; verify surface wind swath, rain swath and rotation tracks against reports and radar.</p></div>
+  </div>
+
+  <h3 style="margin-top:26px">4. Diagnostics that matter to EM <span class="pill plan">plan</span></h3>
+  <ul class="tight">
+    <li><strong>Rainfall:</strong> <code>output_rain</code> and 3-D hydrometeor fields, with accumulations and peak rates that can feed the flood solver (see <a href="#bridge">the bridge</a>).</li>
+    <li><strong>Wind and rotation:</strong> <code>output_sws</code> (max surface wind swath), <code>output_svs</code> (low-level vertical vorticity), <code>output_uh</code> (2–5 km updraft helicity).</li>
+    <li><strong>ZDR-column metrics</strong> (derived): depth, area and volume of the enhanced-ZDR region above the freezing level, tracked against updraft strength and time to first severe signature.</li>
+    <li><strong>Verification:</strong> neighborhood / object-based comparison with radar and storm reports, not point-to-point pixel matching.</li>
+  </ul>
+  <p><a class="btn" href="nwp-lab.html">Open the NWP Lab page (planner + namelist explorer) →</a></p>
+</section>
+
+<section id="flood">
+  <div class="sec-head"><p class="eyebrow">Track 2</p><h2>Warren County flooding: from "runs" to "trusted"</h2></div>
+  <h3>Where it stands</h3>
+  <div class="grid g3">
+    <div class="card"><div class="kicker">Done</div><ul class="tight"><li>12 storms, county + city domains</li><li>Solver verification and mass balance</li><li>COG tiles audited to ≤ 1 cm</li><li>Web + desktop viewers with honesty labels</li></ul></div>
+    <div class="card"><div class="kicker">In progress / weak</div><ul class="tight"><li>First observation comparison (ev4)</li><li>AUC ≈ 0.84 on road names</li><li>No depth validation</li><li>~½ of real rainfall replayed</li></ul></div>
+    <div class="card"><div class="kicker">Not started</div><ul class="tight"><li>Parameter calibration</li><li>Upstream river inflow</li><li>Storm-drain and karst representation</li><li>Radar / NWP-driven rainfall</li></ul></div>
+  </div>
+
+  <figure class="fig reveal" style="margin-top:22px;max-width:720px">
+    <img src="assets/img/ev4-validation-map.webp" width="1300" height="1170" loading="lazy" decoding="async" alt="Map comparing modeled maximum depth in blue with observed flooded roads in red and NWS reports in orange for the April 2025 event">
+    <figcaption><b>Rung L4 evidence.</b> The April 2025 comparison (ev4): modeled maximum depth ≥ 0.10 m against reported flooded roads and NWS reports. Observed roads are drawn whole by name, which flatters the model, and the replay used about half the real rainfall. See <a href="flood.html#validate">the full write-up</a>.</figcaption>
+  </figure>
+
+  <h3 style="margin-top:26px">Calibration design <span class="pill plan">plan</span></h3>
+  <p>With six historical gauge events (Dec 2013, Mar 2015, Jun 2022, Apr 2025, Sep 2017 Harvey remnants, May 2010) I can do <strong>leave-one-event-out</strong> validation: fit on five, test on the sixth, rotate. That guards against tuning the model to a single flood.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Parameter</th><th>Today</th><th>How it would be constrained</th></tr></thead>
+    <tbody>
+      <tr><td>SCS curve number</td><td class="mono">75 open · 98 impervious</td><td>Fit runoff volume to gauge-and-rainfall events; vary with land cover and antecedent wetness</td></tr>
+      <tr><td>Manning n</td><td class="mono">0.035 outside city</td><td>Land-cover table (NLCD) instead of one flat value</td></tr>
+      <tr><td>Initial abstraction ratio</td><td class="mono">I<sub>a</sub> = 0.2 S</td><td>Sensitivity test (lower ratios are common in the literature)</td></tr>
+      <tr><td>Edge outflow slope</td><td class="mono">0.005</td><td>Sensitivity; replace with gauge-based boundary where rivers cross edges</td></tr>
+    </tbody></table></div>
+
+  <h3 style="margin-top:26px">Scores I will report <span class="pill plan">plan</span></h3>
+  <ul class="tight">
+    <li><strong>Categorical at thresholds</strong> (0.10 / 0.30 m): hit rate, false-alarm ratio, critical success index, against mapped extent and closure records.</li>
+    <li><strong>Depth error</strong> against surveyed high-water marks: bias, RMSE, and the fraction within ±15 cm.</li>
+    <li><strong>Ranking skill</strong> (AUC) with a control that accounts for road length, since length alone already separates the ev4 groups about as well.</li>
+    <li><strong>Timing</strong> at gauges, so lead-time claims are earned.</li>
+  </ul>
+</section>
+
+<section id="bridge">
+  <div class="sec-head"><p class="eyebrow">Coupling</p><h2>The bridge: NWP rainfall → flood depth</h2>
+    <p class="muted">The whole chain I'm training toward is: environment → storm → rain field → runoff → depth → impacts.</p></div>
+  <ol class="steps six reveal" aria-label="Chain from environment to impacts">
+    <li class="step cool"><b>Environment</b><span>sounding, shear, CAPE, HSLC</span></li>
+    <li class="step cool"><b>Storm</b><span>CM1, QLCS; ZDR, UH, wind</span></li>
+    <li class="step hot"><b>Rain field</b><span>P(x, y, t) as ensemble members</span></li>
+    <li class="step"><b>Runoff</b><span>calibrated SCS plus river inflow</span></li>
+    <li class="step"><b>Depth</b><span>5 m grid, 24 h, P(h ≥ 30 cm)</span></li>
+    <li class="step"><b>Impacts</b><span>roads, buildings, shelters, utilities</span></li>
+  </ol>
+  <p style="margin-top:16px">Today the rain term is uniform over the domain and comes from a single gauge or a fixed design curve. The coupling step replaces it with a gridded rainfall field and turns one run into an ensemble. A sketch of the post-processing that turns members into a probability map:</p>
+<pre class="code"><code># sketch: exceedance probability from N ensemble members (depth in metres, same 5 m grid)
+import numpy as np, rasterio
+
+members = [f"runs/ens_{i:02d}/max_depth.tif" for i in range(1, 31)]
+stack   = np.stack([rasterio.open(p).read(1) for p in members])   # (N, ny, nx)
+
+p_30cm  = (stack >= 0.30).mean(axis=0)     # P(depth &gt;= 30 cm) per cell
+p_10cm  = (stack >= 0.10).mean(axis=0)     # ignore 2-3 cm rain-on-grid sheet flow
+spread  = stack.std(axis=0)                # where members disagree most</code></pre>
+  <p class="muted">Design only: no ensemble flood runs exist yet. Rainfall sources under consideration are gridded radar-based QPE, station networks and CM1 or other model output, each with its own error that must be propagated rather than hidden.</p>
+</section>
+
+<section id="gates">
+  <div class="sec-head"><p class="eyebrow">Guardrails</p><h2>Which outputs may be used for what</h2>
+    <p class="muted">Every product is tied to the rung it needs. Move the slider to see what each rung would unlock. The default is my honest current position on the flood model.</p></div>
+  <div class="tool">
+    <label class="f" style="max-width:420px">Highest rung actually reached
+      <input id="gate-r" type="range" min="1" max="8" value="3" step="1" aria-describedby="gate-lbl"></label>
+    <p id="gate-lbl" class="mono" style="margin:8px 0 14px">L3: numerically sound, traceable, plausible</p>
+    <div class="tbl-wrap" style="margin-bottom:0"><table id="gate-tbl">
+      <thead><tr><th>Output (already built unless noted)</th><th>EM question it informs</th><th>Caveat that always applies</th><th>Needs</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr data-gate="3"><td>Storm-scenario depth maps (design storms)</td><td>"Where does water collect in a 25-year rain?" for training and planning discussion</td><td>Not a forecast; depths unvalidated</td><td class="mono">L3</td><td class="st"></td></tr>
+        <tr data-gate="3"><td>Storm compare / difference view</td><td>How much worse is the 100-yr than the 10-yr, and where?</td><td>Relative comparison only</td><td class="mono">L3</td><td class="st"></td></tr>
+        <tr data-gate="5"><td>Address risk card</td><td>"Is this property likely to see water?"</td><td>Shows source and uncertainty; never a single number</td><td class="mono">L5</td><td class="st"></td></tr>
+        <tr data-gate="6"><td>Building exposure filter (CSV / GeoJSON)</td><td>Which structures are in the 30 / 60 / 120 cm tiers?</td><td>Counts are model output; ≥ 10 cm threshold</td><td class="mono">L6</td><td class="st"></td></tr>
+        <tr data-gate="6"><td>Dry-route finder</td><td>Which roads stay passable for responders?</td><td>Drains and conduits change real routes</td><td class="mono">L6</td><td class="st"></td></tr>
+        <tr data-gate="6"><td>Critical-facility exposure (hospitals, shelters, utilities)</td><td>Which facilities lose access or power?</td><td>OSM coverage varies; verify with the owner</td><td class="mono">L6</td><td class="st"></td></tr>
+        <tr data-gate="8"><td>Event forecast products (planned)</td><td>"What will flood in the next 6–24 h?"</td><td>Requires forcing, ensembles and EM co-design</td><td class="mono">L8</td><td class="st"></td></tr>
+      </tbody></table></div>
+  </div>
+  <h3 style="margin-top:26px">Communication rules I keep regardless of rung</h3>
+  <ul class="tight">
+    <li><strong>Show the source and the limits</strong> on every view, including that velocities are derived and depths unvalidated.</li>
+    <li><strong>No flooding below 10 cm is claimed.</strong> Rain-on-grid creates 2–3 cm sheet flow everywhere; tiers and building counts start at 10 cm.</li>
+    <li><strong>"Unknown" is not "dry."</strong> Roads not named in reports are unobserved, not confirmed safe.</li>
+    <li><strong>Return period applies to the rain, not the flood.</strong> Antecedent wetness, drainage and missing upstream inflow are outside it.</li>
+    <li><strong>Prefer probabilities and ranges</strong> over single depths once ensembles exist.</li>
+  </ul>
+</section>
+
+<section id="data">
+  <div class="sec-head"><p class="eyebrow">What I need</p><h2>Validation data wish-list <span class="pill plan">candidates</span></h2>
+    <p class="muted">None of these is yet in the model. They are the observations that would move rungs L4→L6.</p></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Data</th><th>Constrains</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Stream-gauge records (Barren River and tributaries)</td><td>Upstream inflow, timing, peak stage</td><td>Needed to represent riverine flooding at all</td></tr>
+      <tr><td>Dense rainfall: gauge networks, Kentucky Mesonet</td><td>Spatial rainfall pattern, uniform-rain error</td><td>Replaces the single-gauge assumption</td></tr>
+      <tr><td>Radar-based QPE (gridded)</td><td>Rain field P(x, y, t)</td><td>Gauge-adjusted product preferred; its error must be carried forward</td></tr>
+      <tr><td>NWS storm reports and local flood reports</td><td>Event timing and location</td><td>Reports are biased toward where people are</td></tr>
+      <tr><td>Post-event high-water marks</td><td>Depth bias / RMSE</td><td>The only direct test of depth accuracy</td></tr>
+      <tr><td>Road-closure logs from city / county</td><td>Categorical skill</td><td>Higher quality than names matched from news articles</td></tr>
+      <tr><td>Drainage network and karst features</td><td>L6 hydraulics</td><td>Official layers, not only DEM-derived depressions</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="em-questions">
+  <div class="sec-head"><p class="eyebrow">Co-design</p><h2>Questions I want emergency managers to answer</h2>
+    <p class="muted">The best way to avoid building the wrong product is to ask early. These are the questions I'd bring to a first conversation.</p></div>
+  <div class="grid g2">
+    <div class="card"><ul class="tight"><li>What depth makes a road <em>unusable</em> for your vehicles and for the public? (30 cm is my assumption; yours may differ.)</li><li>Which facilities and routes matter most during a flood, and who owns the authoritative data?</li><li>What lead time is actionable, and what lead time is too short to matter?</li></ul></div>
+    <div class="card"><ul class="tight"><li>What format fits under pressure: map layer, PDF, dashboard, a few lines of text?</li><li>How should uncertainty be shown so it helps rather than paralyzes?</li><li>What would make you <em>stop</em> trusting a product after one bad miss, and how do I earn it back?</li></ul></div>
+  </div>
+</section>
+
+<section id="next">
+  <div class="sec-head"><p class="eyebrow">Roadmap</p><h2>Proposed next steps <span class="pill plan">plan</span></h2><p class="muted">Ordered by how much each moves the readiness ladder per unit of effort.</p></div>
+  <ol class="tight">
+    <li><strong>Re-run ev4 with the full four-day rainfall</strong> and report the same road-closure scores, to remove the half-rain confound.</li>
+    <li><strong>Add upstream Barren River inflow</strong> from gauge data as a boundary condition.</li>
+    <li><strong>NLCD-based roughness</strong> to replace the flat n = 0.035 outside the city.</li>
+    <li><strong>Leave-one-event-out calibration</strong> of curve number and roughness across the six historical events.</li>
+    <li><strong>Spatially varying rainfall test:</strong> drive one historical event with gridded rainfall and compare with the uniform-gauge result.</li>
+    <li><strong>First CM1 HSLC sensitivity set</strong> (Stage A/B above), then connect its rain-swath output to the flood solver as a process-study demo.</li>
+  </ol>
+  <p class="muted">Related: <a href="flood.html">flood model details</a> · <a href="nwp-lab.html">NWP Lab</a> · <a href="knowledge-base.html">knowledge base</a></p>
+</section>
+
+</div>
+</div>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <p>© <span id="yr">2026</span> Robert G. Lesoski · Western Kentucky University</p>
+  <p>Research prototype; not for operational or safety use. For official flood information consult FEMA, the National Weather Service and local authorities.</p>
+</div></footer>
+<script src="assets/js/site.js"></script>
+<script>
+(function(){
+  var r=document.getElementById('gate-r'); if(!r) return;
+  var names={1:'L1: numerically sound',2:'L2: traceable and reproducible',3:'L3: numerically sound, traceable, plausible',4:'L4: some skill against observations',5:'L5: calibrated',6:'L6: hydraulically complete',7:'L7: observed-rain forced, probabilistic',8:'L8: co-designed with EM'};
+  function upd(){
+    var v=parseInt(r.value,10);
+    document.getElementById('gate-lbl').textContent=names[v];
+    document.querySelectorAll('#gate-tbl tbody tr').forEach(function(tr){
+      var g=parseInt(tr.getAttribute('data-gate'),10), ok=g<=v, c=tr.querySelector('.st');
+      c.innerHTML= ok ? '<span class="pill done">may be shown with caveat</span>' : '<span class="pill limit">gated</span>';
+    });
+  }
+  r.addEventListener('input',upd); upd();
+})();
+</script>
+</body>
+</html>

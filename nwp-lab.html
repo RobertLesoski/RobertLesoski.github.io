@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NWP Lab — CM1 Severe-Storm Modeling | Robert G. Lesoski</title>
+<meta name="description" content="CM1 research program on high-shear, low-CAPE convection and QLCS evolution with ZDR-column diagnostics: experiment design, a namelist explorer, and a grid and time-step planner.">
+<link rel="canonical" href="https://robertlesoski.github.io/nwp-lab.html">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0a0d14">
+<meta property="og:image" content="https://robertlesoski.github.io/assets/img/og-card.jpg">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">robert<b>.</b>lesoski</a>
+    <nav class="nav" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="flood.html">Flood model</a>
+      <a href="nwp-lab.html" aria-current="page">NWP lab</a>
+      <a href="emergency-management.html">Emergency mgmt</a>
+      <a href="knowledge-base.html">Knowledge base</a>
+    </nav>
+    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle theme">☾</button>
+  </div>
+</header>
+
+<div class="page-hero">
+  <div class="wrap">
+    <div class="crumb">home / NWP lab</div>
+    <p class="eyebrow">Numerical weather prediction · CM1 · SVRWx</p>
+    <h1 style="font-size:clamp(30px,4.4vw,46px)">NWP Lab: modeling the storms behind the rain</h1>
+    <p class="lede" style="margin-bottom:0">A research program around Bryan's Cloud Model 1: how severe convection organizes when instability is small but shear is large, what dual-polarization radar signatures reveal early, and how the resulting rain can eventually drive flood models.</p>
+  </div>
+</div>
+
+<main id="main" class="wrap" style="padding-top:36px">
+<div class="with-toc">
+<aside class="toc" aria-label="On this page">
+  <a href="#scope">Scope &amp; status</a>
+  <a href="#science">The science</a>
+  <a href="#design">Experiment design</a>
+  <a href="#config">Config sketch</a>
+  <a href="#planner">Grid &amp; dt planner</a>
+  <a href="#namelist">Namelist explorer</a>
+  <a href="#parcel">Parcel toolbox</a>
+  <a href="#outputs">Diagnostics</a>
+  <a href="#em">Link to EM</a>
+</aside>
+<div>
+
+<section id="scope" style="padding-top:0">
+  <div class="callout info"><strong>Status.</strong> The knowledge base and CM1 reference are <span class="pill done">done</span>. The experiments below are a <span class="pill plan">research plan</span>: this page describes design and tooling, not completed results.</div>
+  <div class="grid g3">
+    <div class="card stat"><div class="num">CM1</div><div class="lbl">Bryan's cloud model; reference built against README.namelist (cm1r22.0)</div></div>
+    <div class="card stat"><div class="num">20+</div><div class="lbl">namelist blocks mapped (&amp;param0 … &amp;param23, &amp;nssl2mom_params)</div></div>
+    <div class="card stat"><div class="num">10</div><div class="lbl">course chapters tied to model controls</div></div>
+  </div>
+  <p style="margin-top:20px">I work on this as an independent <strong>SVRWx numerical 3-D modeling</strong> effort alongside my undergraduate research at WKU's DSOC and AI Research Lab. CM1 is a good fit because it is an idealized-to-semi-realistic cloud-resolving model: every physical choice is a namelist switch I can reason about, change one at a time, and trace back to the textbook concept behind it.</p>
+</section>
+
+<section id="science">
+  <div class="sec-head"><p class="eyebrow">Research questions</p><h2>The science</h2></div>
+  <div class="grid" style="gap:22px;max-width:860px">
+    <figure class="fig reveal">
+      <img src="assets/img/hslc-regime-schematic.svg" width="1000" height="560" loading="lazy" decoding="async" alt="Regime map of CAPE versus 0 to 6 kilometer shear with the high-shear low-CAPE region shaded and labeled HSLC">
+      <figcaption><b>Where HSLC sits.</b> Storms with little instability but strong shear: common in the Southeast, often QLCS-organized, and hard to warn for. Conceptual schematic; thresholds vary by definition.</figcaption>
+    </figure>
+    <figure class="fig reveal">
+      <img src="assets/img/zdr-column-schematic.svg" width="1000" height="560" loading="lazy" decoding="async" alt="Schematic of a ZDR column rising above the freezing level inside a convective updraft">
+      <figcaption><b>What a ZDR column is.</b> Differential reflectivity (ZDR) is high where large liquid drops are present. Drops carried above the 0 °C level by an updraft form a column; its depth can track updraft strength. Conceptual schematic, not data.</figcaption>
+    </figure>
+  </div>
+  <ol class="tight" style="margin-top:20px">
+    <li><strong>HSLC ZDR columns.</strong> Test how ZDR columns behave in high-shear, low-CAPE environments typical of the southeastern U.S., where instability is low but shear is extreme: do column depth or area lead the first severe signature, and by how much?</li>
+    <li><strong>Which simulation is closest to reality?</strong> Apply findings to real radar observations and to higher-complexity models, and compare.</li>
+    <li><strong>Operational features.</strong> Investigate other dual-polarization features that could improve real-time tracking and forecasting of QLCS evolution and severe hazards.</li>
+    <li><strong>Real-event reconstruction.</strong> Simulate specific events (a derecho case among them) and run selected tornado cases in high detail.</li>
+  </ol>
+</section>
+
+<section id="design">
+  <div class="sec-head"><p class="eyebrow">Method</p><h2>Experiment design <span class="pill plan">plan</span></h2>
+    <p class="muted">A factorial sweep keeps changes interpretable: vary one thing at a time first, then combinations, then ensembles.</p></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Factor</th><th>Levels (proposed)</th><th>How it is set</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Instability (CAPE)</td><td>3 (low → moderate)</td><td>Scale boundary-layer moisture in the sounding file</td><td>Span the HSLC regime and just outside it</td></tr>
+      <tr><td>0–6 km shear</td><td>3</td><td>Rescale hodograph winds in the sounding file</td><td>Isolate shear's role at fixed CAPE</td></tr>
+      <tr><td>Microphysics</td><td>3 (<code>ptype</code> 5 / 26 / 27)</td><td>Morrison vs NSSL 2-moment (graupel, graupel + hail)</td><td>ZDR-relevant drop and ice treatment differs by scheme</td></tr>
+      <tr><td>Horizontal spacing</td><td>2 (500 m, 250 m)</td><td><code>dx</code>, <code>dy</code>, with <code>dz</code> adjusted</td><td>Resolve updraft and cold-pool structure</td></tr>
+      <tr><td>Initial perturbation</td><td>5–10 members</td><td><code>irandp</code> with <code>numrand</code></td><td>Report spread rather than a single storm</td></tr>
+    </tbody></table></div>
+  <div class="tool">
+    <h3>Design size</h3>
+    <div class="row">
+      <label class="f">CAPE levels<input id="ds-a" type="number" min="1" value="3"></label>
+      <label class="f">Shear levels<input id="ds-b" type="number" min="1" value="3"></label>
+      <label class="f">Microphysics<input id="ds-c" type="number" min="1" value="3"></label>
+      <label class="f">Spacings<input id="ds-d" type="number" min="1" value="2"></label>
+      <label class="f">Members<input id="ds-e" type="number" min="1" value="5"></label>
+    </div>
+    <div class="out" id="ds-out"></div>
+    <p class="note">Full factorial grows quickly, so a staged design (A idealized → B sweep → C ensemble → D real events, see <a href="emergency-management.html#nwp">the EM page</a>) is the practical path.</p>
+  </div>
+</section>
+
+<section id="config">
+  <div class="sec-head"><p class="eyebrow">Starting point</p><h2>Config sketch</h2>
+    <p class="muted">An excerpt for an idealized supercell/QLCS-style run on a sounding file. Parameter names and values follow the namelist reference; everything else keeps the defaults in the config files that ship with CM1. It is a starting point, not a validated configuration.</p></div>
+<pre class="code"><code>&amp;param0
+  nx = 400,  ny = 400,  nz = 60,
+ /
+ &amp;param1
+  dx = 500.,  dy = 500.,  dz = 250.,
+  dtl = 3.5,  timax = 10800.,  tapfrq = 300.,
+ /
+ &amp;param2
+  cm1setup = 1,  sgsmodel = 1,  adapt_dt = 1,
+  hadvordrs = 5,  vadvordrs = 5,  hadvordrv = 5,  vadvordrv = 5,  idiff = 0,
+  imoist = 1,  ptype = 26,  eqtset = 2,
+  psolver = 2,  icor = 1,
+  wbc = 2,  ebc = 2,  sbc = 2,  nbc = 2,  bbc = 1,  tbc = 1,  irdamp = 1,
+  isnd = 7,                 ! read input_sounding
+  iinit = 1,                ! warm bubble (3 = line of bubbles for QLCS-style)
+  irandp = 1,  numrand = 1, ! ensemble member index
+ /
+ &amp;param9
+  output_dbz = 1,  output_uh = 1,  output_vort = 1,
+  output_rain = 1,  output_sws = 1,  output_svs = 1,
+  output_cape = 1,  output_cin = 1,  output_lcl = 1,  output_lfc = 1,
+ /</code></pre>
+  <h3>Sounding file layout</h3>
+<pre class="code"><code># input_sounding (isnd = 7)
+# line 1 : surface pressure (mb)   surface theta (K)   surface qv (g/kg)
+# line 2+: z (m)   theta (K)   qv (g/kg)   u (m/s)   v (m/s)</code></pre>
+  <ul class="tight">
+    <li><strong>Pairing rule:</strong> odd advection orders carry implicit diffusion (<code>idiff = 0</code>); even orders usually want <code>idiff = 1</code>.</li>
+    <li><strong>Time step:</strong> start near min(Δ)/67 for <code>psolver</code> 2–6 and let <code>adapt_dt = 1</code> hold <code>cfl_limit</code> (1.0). Here min(Δ) = 250 m gives ≈ 3.7 s, hence <code>dtl = 3.5</code>.</li>
+    <li><strong>Grid check:</strong> 400 × 400 × 60 at 500 / 500 / 250 m is a 200 × 200 × 15 km domain.</li>
+  </ul>
+</section>
+
+<section id="planner">
+  <div class="sec-head"><p class="eyebrow">Tool</p><h2>Grid &amp; time-step planner</h2>
+    <p class="muted">Rules of thumb from README.namelist: <code>dtl ≈ min(dx,dy,dz)/67</code> for <code>psolver</code> 2–6 (limited by the fastest non-acoustic speed) and ≈ min(Δ)/700 for the fully explicit <code>psolver = 1</code>.</p></div>
+  <div class="tool">
+    <div class="row">
+      <label class="f">nx<input id="cm-nx" type="number" value="400"></label>
+      <label class="f">ny<input id="cm-ny" type="number" value="400"></label>
+      <label class="f">nz<input id="cm-nz" type="number" value="60"></label>
+      <label class="f">dx (m)<input id="cm-dx" type="number" value="500"></label>
+      <label class="f">dy (m)<input id="cm-dy" type="number" value="500"></label>
+      <label class="f">dz (m)<input id="cm-dz" type="number" value="250"></label>
+    </div>
+    <div class="row">
+      <label class="f">timax (s)<input id="cm-timax" type="number" value="10800"></label>
+      <label class="f">max speed U (m/s)<input id="cm-U" type="number" value="60"></label>
+      <label class="f">psolver<select id="cm-ps"><option value="2" selected>2 · split explicit</option><option value="3">3 · split vert-implicit</option><option value="1">1 · fully explicit</option></select></label>
+    </div>
+    <div class="out" id="cm-out"></div>
+    <p class="note" id="cm-note"></p>
+  </div>
+</section>
+
+<section id="namelist">
+  <div class="sec-head"><p class="eyebrow">Reference</p><h2>Namelist explorer</h2>
+    <p class="muted">A searchable subset of my paraphrased <code>namelist.input</code> reference. Always check the <code>README.namelist</code> shipped with your own CM1 download: names and allowed values shift between releases.</p></div>
+  <div class="tool">
+    <div class="row" style="grid-template-columns:2fr 1fr">
+      <label class="f">Search<input id="nl-q" type="search" placeholder="e.g. ptype, advection, restart, shear"></label>
+      <label class="f">Block<select id="nl-block"><option value="">all blocks</option></select></label>
+    </div>
+    <p id="nl-count" class="note" style="margin:0 0 10px"></p>
+    <div class="tbl-wrap" style="margin-bottom:0;max-height:480px;overflow:auto"><table>
+      <thead><tr><th>Block</th><th>Variable(s)</th><th>Meaning</th><th>Values / notes</th></tr></thead>
+      <tbody id="nl-body"></tbody></table></div>
+  </div>
+  <h3 style="margin-top:24px">Pitfalls I keep written down</h3>
+  <ol class="tight">
+    <li>Odd advection order ↔ <code>idiff = 0</code>; even order ↔ <code>idiff = 1</code>.</li>
+    <li><code>dtl</code> too large blows up the run: start from the rule above or use <code>adapt_dt = 1</code>.</li>
+    <li><code>psolver = 3</code> only makes sense when dz ≪ dx, dy.</li>
+    <li><code>bbc = 3</code> (drag) needs <code>sfcmodel ≥ 1</code> and the &amp;param12 settings; <code>bbc = 1</code> free-slip is the idealized default.</li>
+    <li>Moist runs need <code>imoist = 1</code> plus a <code>ptype</code>; <code>ihail</code> only matters for ptype 2 / 5.</li>
+    <li>Old <code>iturb</code> is gone: use <code>sgsmodel</code> / <code>horizturb</code>.</li>
+  </ol>
+</section>
+
+<section id="parcel">
+  <div class="sec-head"><p class="eyebrow">Thermodynamics</p><h2>Parcel toolbox</h2>
+    <p class="muted">Quick checks of a sounding before it goes into <code>input_sounding</code>. Rules of thumb from my course notes, not a substitute for a full parcel calculation on the Skew-T.</p></div>
+  <div class="tool">
+    <div class="row">
+      <label class="f">Surface T (°C)<input id="lc-T" type="number" step="0.5" value="28"></label>
+      <label class="f">Dew point (°C)<input id="lc-Td" type="number" step="0.5" value="20"></label>
+      <label class="f">Env. lapse rate (°C/km)<input id="lc-elr" type="number" step="0.1" value="7.5"></label>
+    </div>
+    <div class="out" id="lc-out"></div>
+    <p class="note">LCL ≈ 125 m × (T − T<sub>d</sub>). Stability by comparing the environmental lapse rate with the dry (9.8 °C/km) and moist (≈ 6 °C/km average) adiabatic rates: ELR &gt; DALR is absolutely unstable, ELR &lt; MALR absolutely stable, in between conditionally unstable. (Correcting the order <em>ELR &gt; DALR &gt; MALR</em> was one of the fixes logged in my notes.)</p>
+  </div>
+</section>
+
+<section id="outputs">
+  <div class="sec-head"><p class="eyebrow">What I read out</p><h2>Diagnostics map</h2></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Question</th><th>Output</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>How strong and where is rotation?</td><td class="mono">output_uh, output_vort, output_svs</td><td>2–5 km updraft helicity; low-level vorticity swath for mesovortices</td></tr>
+      <tr><td>Where is damaging wind?</td><td class="mono">output_sws</td><td>Maximum surface wind swath</td></tr>
+      <tr><td>How much rain, where?</td><td class="mono">output_rain, output_dbz</td><td>Feeds the flood-model coupling; reflectivity for radar comparison</td></tr>
+      <tr><td>What did the environment do?</td><td class="mono">output_cape/cin/lcl/lfc, output_pwat</td><td>Track instability and moisture through the run</td></tr>
+      <tr><td>What forces the updraft?</td><td class="mono">output_pdcomp, output_buoyancy</td><td>Buoyancy vs dynamic-pressure decomposition</td></tr>
+      <tr><td>Where did the air come from?</td><td class="mono">iprcl, nparcels, prcl_*</td><td>Trajectory-based inflow analysis</td></tr>
+      <tr><td>Is the numerics healthy?</td><td class="mono">stat_cfl, cfl_limit</td><td>Keep max Courant in range; use budgets for conservation checks</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="em">
+  <div class="sec-head"><p class="eyebrow">Why this matters downstream</p><h2>Link to emergency management</h2></div>
+  <p>The rain swath a storm produces is the missing forcing for my flood model, which today assumes uniform rain from one gauge. The plan is to use simulated and observed rainfall fields as spatially varying input, run ensembles, and report probabilities. The honest path, with a readiness ladder and guardrails, is on the <a href="emergency-management.html">emergency-management page</a>.</p>
+  <p class="cta"><a class="btn primary" href="emergency-management.html#bridge">See the NWP → flood bridge</a><a class="btn" href="knowledge-base.html">Open the knowledge base</a></p>
+</section>
+
+</div>
+</div>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <p>© <span id="yr">2026</span> Robert G. Lesoski · Western Kentucky University</p>
+  <p>Namelist reference paraphrased from George Bryan's CM1 documentation (NCAR MMM). Schematics are conceptual, not data.</p>
+</div></footer>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/tools.js"></script>
+<script>
+(function(){
+  if(!document.getElementById('ds-a')) return;
+  function g(id){var v=parseInt(document.getElementById(id).value,10);return v>0?v:1;}
+  function upd(){
+    var a=g('ds-a'),b=g('ds-b'),c=g('ds-c'),d=g('ds-d'),e=g('ds-e');
+    var cfg=a*b*c*d, runs=cfg*e;
+    document.getElementById('ds-out').innerHTML=
+      '<div class="o"><b>'+cfg+'</b><span>configurations (full factorial)</span></div>'+
+      '<div class="o"><b>'+runs+'</b><span>runs incl. ensemble members</span></div>'+
+      '<div class="o"><b>'+(a+b+c+d-3)+'</b><span>runs for one-at-a-time baseline sweep</span></div>';
+  }
+  ['ds-a','ds-b','ds-c','ds-d','ds-e'].forEach(function(id){document.getElementById(id).addEventListener('input',upd);});
+  upd();
+})();
+</script>
+</body>
+</html>

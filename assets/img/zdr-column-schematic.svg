@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" role="img" aria-label="Conceptual schematic of a ZDR column: a narrow column of enhanced differential reflectivity extending above the 0 degree C level inside a convective updraft.">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1020"/><stop offset="1" stop-color="#16213a"/></linearGradient>
+    <linearGradient id="zdr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb454" stop-opacity=".3"/><stop offset=".5" stop-color="#ff8a3d" stop-opacity=".9"/><stop offset="1" stop-color="#ff5468" stop-opacity=".95"/></linearGradient>
+    <radialGradient id="core" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff5468" stop-opacity=".85"/><stop offset="1" stop-color="#ff5468" stop-opacity="0"/></radialGradient>
+    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#e7eaf1"/></marker>
+  </defs>
+  <rect width="1000" height="560" fill="url(#sky)"/>
+  <g font-family="ui-monospace,Consolas,monospace">
+    <!-- axes -->
+    <line x1="80" y1="40" x2="80" y2="480" stroke="#3a4560" stroke-width="2"/>
+    <line x1="80" y1="480" x2="700" y2="480" stroke="#3a4560" stroke-width="2"/>
+    <g font-size="17" fill="#98a3b8">
+      <text x="20" y="30">height</text>
+      <text x="42" y="486">0</text><text x="42" y="386">3</text><text x="42" y="286">6</text><text x="42" y="186">9</text><text x="26" y="86">12 km</text>
+    </g>
+    <!-- freezing level -->
+    <line x1="80" y1="372" x2="700" y2="372" stroke="#4cc9f0" stroke-dasharray="8 6" stroke-width="2"/>
+    <text x="92" y="362" font-size="17" fill="#4cc9f0">0 °C level</text>
+    <!-- cloud body -->
+    <path d="M200 480 C185 390 220 300 275 250 C290 160 360 100 440 100 C530 95 600 150 608 230 C660 270 668 380 640 480 Z" fill="#8aa0c8" fill-opacity=".16" stroke="#8aa0c8" stroke-opacity=".55" stroke-width="2"/>
+    <ellipse cx="425" cy="430" rx="120" ry="50" fill="url(#core)"/>
+    <!-- ZDR column -->
+    <path d="M396 480 L388 296 Q392 268 413 260 Q434 268 438 296 L452 480 Z" fill="url(#zdr)" stroke="#ffb454" stroke-width="2"/>
+    <!-- updraft arrows -->
+    <path d="M345 470 C335 400 335 330 352 250" fill="none" stroke="#e7eaf1" stroke-width="3" marker-end="url(#a)"/>
+    <path d="M505 470 C515 400 505 330 488 250" fill="none" stroke="#e7eaf1" stroke-width="3" marker-end="url(#a)"/>
+    <text x="300" y="232" font-size="17" fill="#c9d3e6">updraft</text>
+    <text x="400" y="132" font-size="17" fill="#c9d3e6" text-anchor="middle">ice, graupel, hail</text>
+    <!-- callouts -->
+    <line x1="438" y1="318" x2="712" y2="318" stroke="#ffb454" stroke-width="1.5"/>
+    <text x="722" y="314" font-size="22" font-weight="700" fill="#ffb454">ZDR column</text>
+    <text x="722" y="340" font-size="16" fill="#c9d3e6">large liquid drops</text>
+    <text x="722" y="360" font-size="16" fill="#c9d3e6">lofted above 0 °C</text>
+    <line x1="520" y1="440" x2="712" y2="440" stroke="#ff5468" stroke-width="1.5"/>
+    <text x="722" y="436" font-size="22" font-weight="700" fill="#ff5468">Reflectivity</text>
+    <text x="722" y="462" font-size="16" fill="#c9d3e6">precipitation core</text>
+    <text x="80" y="528" font-size="15" fill="#8794ad">Conceptual schematic. Not model output or data; heights are illustrative.</text>
+  </g>
+</svg>
