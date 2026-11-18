@@ -142,6 +142,13 @@
     <li><strong>Time step:</strong> start near min(Δ)/67 for <code>psolver</code> 2–6 and let <code>adapt_dt = 1</code> hold <code>cfl_limit</code> (1.0). Here min(Δ) = 250 m gives ≈ 3.7 s, hence <code>dtl = 3.5</code>.</li>
     <li><strong>Grid check:</strong> 400 × 400 × 60 at 500 / 500 / 250 m is a 200 × 200 × 15 km domain.</li>
   </ul>
+  <figure class="fig vid reveal" style="margin-top:22px;max-width:960px">
+      <video controls muted loop playsinline preload="none" data-autoplay width="1024" height="576" poster="assets/img/bubble-poster.webp">
+        <source src="assets/video/bubble.mp4" type="video/mp4">
+        Your browser can't play this video. <a href="assets/video/bubble.mp4">Download the clip</a>.
+      </video>
+      <figcaption><b>The classic first test.</b> A 2 K warm bubble released in a neutral atmosphere rises and rolls up into a thermal. This is a small 2-D Boussinesq vorticity&ndash;streamfunction toy I wrote to build intuition (pseudo-spectral, RK4, 31 m grid) <b>and is not CM1 output</b>. CM1 ships the full 3-D compressible version of this test, which is the right smoke test for any new build or namelist.</figcaption>
+    </figure>
 </section>
 
 <section id="planner">

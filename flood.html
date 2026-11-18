@@ -156,6 +156,13 @@
     <li><strong>Safety guards:</strong> aborts if the rain file implies &gt; 600 mm/h (catches the classic mm/h vs m/s unit mistake) or if the grid is not UTM 16N at 5 m or exceeds 150 M cells; the county launcher also refuses to submit if the city DEM and 3DEP disagree by &gt; 3 m (datum / units).</li>
     <li><strong>Mass balance:</strong> logged each run; the 2-year county run closes to 2.2 × 10⁻⁹ %. This checks the numerical scheme against the SCS runoff volume, <em>not</em> the physics.</li>
   </ul>
+  <figure class="fig vid reveal" style="margin-top:22px;max-width:900px">
+      <video controls muted loop playsinline preload="none" data-autoplay width="900" height="720" poster="assets/img/solver-poster.webp">
+        <source src="assets/video/solver.mp4" type="video/mp4">
+        Your browser can't play this video. <a href="assets/video/solver.mp4">Download the clip</a>.
+      </video>
+      <figcaption><b>The scheme, running.</b> A numpy implementation of the same local-inertial update shown above (face discharge with Manning friction, cell continuity, rain source, CFL time step, free outflow at the right edge) on <em>synthetic</em> 9 &times; 6 km terrain: a meandering channel, side valleys and hillslope hollows, under a Gaussian storm peaking at 75 mm/h. Water collects in the hollows first, then the channel fills and the pulse travels downstream. <b>Illustration of the method only:</b> not Warren County, not calibrated, not a validated forecast.</figcaption>
+    </figure>
 </section>
 
 <section id="rain">
@@ -275,6 +282,25 @@ scancel -n warrenv2</code></pre>
     <div class="card reveal"><div class="kicker">Desktop · Vulkan / wgpu</div>
       <ul class="tight"><li>~125 fps (city) and ~140 fps (county) at 1080p on a GTX 1650</li><li>Measure, elevation profile, depth-over-time, storm compare and difference, flood duration</li><li>Dry-route finder; building exposure filter with CSV / GeoJSON export</li><li>Time-lapse, guided tour, PNG / MP4 export; works offline</li></ul></div>
   </div>
+  <div style="margin-top:22px;max-width:1040px">
+    <figure class="fig vid reveal">
+      <video controls muted loop playsinline preload="none" data-autoplay width="1040" height="748" poster="assets/img/tour-poster.webp">
+        <source src="assets/video/tour.mp4" type="video/mp4">
+        Your browser can't play this video. <a href="assets/video/tour.mp4">Download the clip</a>.
+      </video>
+      <figcaption><b>The native desktop viewer, in use.</b> A 20-second tour of the probe, cinematic, guided-tour, measure and profile tools, ending on the county domain (100-year storm). Frames are cropped to the map area. Every depth shown is unvalidated research-model output (preview from depth tiers in the city views; solver rasters for the county).</figcaption>
+    </figure>
+  </div>
+  <div class="reveal" style="margin-top:30px;max-width:960px">
+    <div class="compare" role="group" aria-label="Before and after comparison of water rendering: glare artifacts versus the fixed shader">
+      <img src="assets/img/water-glare-before.webp" width="960" height="540" loading="lazy" decoding="async" alt="Downtown and the river with bright white glare artifacts on the water surface">
+      <div class="after"><img src="assets/img/water-glare-after.webp" width="960" height="540" loading="lazy" decoding="async" alt="Same view after the fix: continuous blue water without white blotches"></div>
+      <input type="range" min="0" max="100" value="50" aria-label="Drag to compare before (left) and after (right) the water-shading fix">
+      <div class="bar"></div>
+      <span class="tagl">BEFORE</span><span class="tagr">AFTER</span>
+    </div>
+    <p class="cap"><b>Rendering is part of honesty, too.</b> Specular glare on the water used to look like dry white patches; the fix keeps depth readable at glancing angles. Same camera, 25-year storm, simulated output.</p>
+  </div>
 </section>
 
 <section id="gallery">
@@ -291,6 +317,11 @@ scancel -n warrenv2</code></pre>
     <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: LiDAR terrain downtown"><img src="assets/img/lidar-downtown.webp" width="1024" height="576" loading="lazy" decoding="async" alt="Hillshaded LiDAR terrain of the downtown street grid with small blue ponds"></button><figcaption>LiDAR-resolved terrain, downtown: the street grid and building-scale relief are visible in the DEM itself, with small ponds in the low spots.</figcaption></figure>
     <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Warren County overview"><img src="assets/img/warren-overview-25yr-h12.webp" width="1024" height="576" loading="lazy" decoding="async" alt="Warren County terrain with river meanders and small ponds"></button><figcaption>Whole-county view at 25-year hour 12.</figcaption></figure>
     <figure class="shot wide"><button class="lb" type="button" aria-label="Enlarge: desktop viewer interface"><img src="assets/img/desktop-viewer-ui.webp" width="1280" height="720" loading="lazy" decoding="async" alt="Desktop viewer with statistics panel, legend, at-risk building list and a timeline chart"></button><figcaption>The desktop viewer: statistics by depth tier, legend, at-risk list with road-level locations, hour-by-hour timeline, and an always-on honesty line stating that velocity is derived. County domain, 100-year storm, hour 12 (the tile-vs-grid comparison is shown with its own caveats).</figcaption></figure>
+    <figure class="shot wide"><button class="lb" type="button" aria-label="Enlarge: basemap on and off"><img src="assets/img/basemap-on-off.webp" width="1280" height="720" loading="lazy" decoding="async" alt="Split view with the map background on (left) and off (right)"></button><figcaption>Basemap on vs. off: the same flood tiers over a road-map background and over plain terrain. The toggle exists so imagery never hides the depth colours.</figcaption></figure>
+    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: terrain with real OSM basemap"><img src="assets/img/basemap-terrain-osm.webp" width="1280" height="720" loading="lazy" decoding="async" alt="Oblique terrain of Bowling Green draped with a road basemap and orange building tiers"></button><figcaption>Terrain draped with a real road basemap (OpenStreetMap, zoom 12): useful for orientation, with building tiers on top.</figcaption></figure>
+    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: selected building at hour 24"><img src="assets/img/selected-building.webp" width="1440" height="810" loading="lazy" decoding="async" alt="A selected building outlined in yellow beside ponded water at hour 24"></button><figcaption>Selecting a building outlines it and opens its per-storm depth card. 25-year storm, hour 24.</figcaption></figure>
+    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: golden-hour sky"><img src="assets/img/golden-hour.webp" width="960" height="540" loading="lazy" decoding="async" alt="City view at golden hour with the sun near the horizon and distant ridges"></button><figcaption>Golden-hour lighting, for presentation views. Lighting is cosmetic and does not change any depth.</figcaption></figure>
+    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: building facade shading"><img src="assets/img/facade-windows.webp" width="960" height="540" loading="lazy" decoding="async" alt="Floodplain and river bend with shaded building facades"></button><figcaption>Facade shading added for depth cues at oblique camera angles; simulated flood tiers on the buildings.</figcaption></figure>
   </div>
   <p class="credit" style="margin-top:14px">Terrain: USGS 3DEP and KyFromAbove. Contains data © OpenStreetMap contributors (ODbL) where roads and buildings appear. Images generated by my viewers; model output is unvalidated.</p>
 </section>

@@ -163,6 +163,20 @@
       else if (e.key === 'ArrowRight') show(idx + 1);
     });
   }
+  (function () {
+    var vids = document.querySelectorAll('video[data-autoplay]');
+    if (!vids.length) return;
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || !('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        var v = e.target;
+        if (e.isIntersecting && e.intersectionRatio >= 0.5) { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+        else if (!v.paused) v.pause();
+      });
+    }, { threshold: [0, 0.5] });
+    vids.forEach(function (v) { io.observe(v); });
+  })();
   document.querySelectorAll('.compare').forEach(function (c) {
     var r = c.querySelector('input[type="range"]');
     function set() { c.style.setProperty('--pos', r.value + '%'); }

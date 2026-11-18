@@ -400,3 +400,7 @@ a.card:hover .thumb img { transform: scale(1.03); }
 /* wide SVG diagrams scroll sideways on narrow screens instead of shrinking text */
 .diagram { overflow-x: auto; }
 .diagram svg { min-width: 720px; }
+
+/* video */
+.vid video { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); background: #0b0f18; }
+.vgrid { display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); align-items: start; }

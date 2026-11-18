@@ -178,6 +178,22 @@
     <li><strong>Ranking skill</strong> (AUC) with a control that accounts for road length, since length alone already separates the ev4 groups about as well.</li>
     <li><strong>Timing</strong> at gauges, so lead-time claims are earned.</li>
   </ul>
+  <div class="vgrid" style="margin-top:26px">
+    <figure class="fig vid reveal">
+      <video controls muted loop playsinline preload="none" data-autoplay width="1040" height="748" poster="assets/img/tour-poster.webp">
+        <source src="assets/video/tour.mp4" type="video/mp4">
+        Your browser can't play this video. <a href="assets/video/tour.mp4">Download the clip</a>.
+      </video>
+      <figcaption><b>The native desktop viewer, in use.</b> A 20-second tour of the probe, cinematic, guided-tour, measure and profile tools, ending on the county domain (100-year storm). Frames are cropped to the map area. Every depth shown is unvalidated research-model output (preview from depth tiers in the city views; solver rasters for the county).</figcaption>
+    </figure>
+    <figure class="fig vid reveal">
+      <video controls muted loop playsinline preload="none" data-autoplay width="900" height="720" poster="assets/img/solver-poster.webp">
+        <source src="assets/video/solver.mp4" type="video/mp4">
+        Your browser can't play this video. <a href="assets/video/solver.mp4">Download the clip</a>.
+      </video>
+      <figcaption><b>The scheme, running.</b> A numpy implementation of the same local-inertial update shown above (face discharge with Manning friction, cell continuity, rain source, CFL time step, free outflow at the right edge) on <em>synthetic</em> 9 &times; 6 km terrain: a meandering channel, side valleys and hillslope hollows, under a Gaussian storm peaking at 75 mm/h. Water collects in the hollows first, then the channel fills and the pulse travels downstream. <b>Illustration of the method only:</b> not Warren County, not calibrated, not a validated forecast.</figcaption>
+    </figure>
+  </div>
 </section>
 
 <section id="bridge">
@@ -201,6 +217,15 @@ stack   = np.stack([rasterio.open(p).read(1) for p in members])   # (N, ny, nx)
 p_30cm  = (stack >= 0.30).mean(axis=0)     # P(depth &gt;= 30 cm) per cell
 p_10cm  = (stack >= 0.10).mean(axis=0)     # ignore 2-3 cm rain-on-grid sheet flow
 spread  = stack.std(axis=0)                # where members disagree most</code></pre>
+  <div style="margin:18px 0 6px;max-width:960px">
+    <figure class="fig vid reveal">
+      <video controls muted loop playsinline preload="none" data-autoplay width="1024" height="576" poster="assets/img/ensemble-poster.webp">
+        <source src="assets/video/ensemble.mp4" type="video/mp4">
+        Your browser can't play this video. <a href="assets/video/ensemble.mp4">Download the clip</a>.
+      </video>
+      <figcaption><b>From one run to a probability.</b> Each line is one synthetic ensemble member's depth at a single building. Members that cross the damage threshold turn red, and the running estimate of P(depth &ge; 0.3 m) settles as the count grows. This is the product I want from the coupled system, and it is a design illustration with invented numbers: no ensemble flood runs exist yet.</figcaption>
+    </figure>
+  </div>
   <p class="muted">Design only: no ensemble flood runs exist yet. Rainfall sources under consideration are gridded radar-based QPE, station networks and CM1 or other model output, each with its own error that must be propagated rather than hidden.</p>
 </section>
 

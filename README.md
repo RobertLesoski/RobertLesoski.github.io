@@ -19,6 +19,7 @@ Live site: https://robertlesoski.github.io/
 - Flood depths are research-model output and are **not validated**. Nothing here is for safety, insurance, engineering or emergency decisions.
 - Items marked "plan" are intentions, not results.
 - Conceptual schematics (ZDR column, HSLC regime map) are illustrations, not data.
+- Videos in `assets/video/`: `tour.mp4` is a cropped screen capture sequence from the real desktop viewer (unvalidated depths). The other three are my own small simulations and are labelled as such in-page: `solver.mp4` (local-inertial shallow-water scheme on **synthetic** terrain), `bubble.mp4` (2-D Boussinesq warm-bubble toy, **not CM1 output**) and `ensemble.mp4` (**invented** numbers illustrating exceedance probability).
 - Screenshots come from the `bg-flood-map` desktop viewer. Terrain: USGS 3DEP and KyFromAbove. Contains data © OpenStreetMap contributors (ODbL).
 
 ## Tech
