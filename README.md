@@ -25,6 +25,7 @@ Live site: https://robertlesoski.github.io/
 ## Image credits
 
 - Placeholder photos on the home page (replace with my own): bridges at Ashland by Antony-22 (CC BY-SA 4.0), a thunderstorm over eastern Kentucky by Ken Lund (CC BY-SA 2.0), WKU campus by Bbadgett (CC BY-SA 3.0); all via Wikimedia Commons, resized.
+- Barren River bridge photos on the flood page by Nyttend (public domain, via Wikimedia Commons). A full table with links to every original is in the "Image credits" section of the home page.
 - NWS / NOAA graphics on the flood page (Barren River hydrograph, April 2025 and May 2010 rainfall maps) are US government works.
 - Everything else is my own work or output of my own models; see captions.
 
