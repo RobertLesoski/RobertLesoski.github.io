@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="en" class="no-js" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,9 +7,11 @@
 <meta name="description" content="A readiness ladder for taking a CM1 severe-storm program and a GPU flood model of Warren County, KY from research prototype toward emergency-management decision support, with evidence, gaps and guardrails.">
 <link rel="canonical" href="https://robertlesoski.github.io/emergency-management.html">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#0a0d14">
+<meta name="theme-color" content="#0b1120">
 <meta property="og:image" content="https://robertlesoski.github.io/assets/img/og-card.jpg">
-<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/site.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -20,14 +22,16 @@
 <header class="site-header">
   <div class="wrap">
     <a class="brand" href="index.html">robert<b>.</b>lesoski</a>
-    <nav class="nav" aria-label="Primary">
-      <a href="index.html">Home</a>
+    <nav class="nav" id="site-nav" aria-label="Primary">
+      <a href="index.html#work">Work</a>
       <a href="flood.html">Flood model</a>
       <a href="nwp-lab.html">NWP lab</a>
-      <a href="emergency-management.html" aria-current="page">Emergency mgmt</a>
-      <a href="knowledge-base.html">Knowledge base</a>
+      <a href="emergency-management.html" aria-current="page">Field &amp; EM</a>
+      <a href="index.html#timeline">Timeline</a>
+      <a href="index.html#contact">Contact</a>
     </nav>
-    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle theme">☾</button>
+    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme" aria-pressed="false">☾</button>
+    <button id="menu-btn" class="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">☰</button>
   </div>
 </header>
 
@@ -51,6 +55,7 @@
   <a href="#bridge">The bridge</a>
   <a href="#gates">Outputs &amp; guardrails</a>
   <a href="#data">Validation data</a>
+  <a href="#field">Track 3 · Field operations</a>
   <a href="#em-questions">Questions for EM</a>
   <a href="#next">Proposed next steps</a>
 </aside>
@@ -62,21 +67,22 @@
   <div class="sec-head"><p class="eyebrow">Framing</p><h2>What "training" means here</h2></div>
   <p>I use "training" in the practitioner's sense: the full cycle by which a numerical model earns trust. For both tracks that means <strong>learning</strong> the physics, <strong>building</strong> the tooling, <strong>verifying</strong> that the code computes what it claims, <strong>validating</strong> against observations, <strong>calibrating</strong> the free parameters, <strong>coupling</strong> the pieces into one forecast-to-impact chain, and finally <strong>handing off</strong> to the people who make decisions, then feeding their feedback back in.</p>
   <ul class="tight">
-    <li><strong>Track 1: NWP Lab.</strong> Severe-convection modeling with Bryan's Cloud Model 1 (CM1): the storm environment and processes that decide where hazardous rain, wind and rotation occur.</li>
+    <li><strong>Track 1: NWP Lab.</strong> Severe-convection modeling with Bryan's Cloud Model 1 (CM1), plus neural emulators trained on its output: the storm environment and processes that decide where hazardous rain, wind and rotation occur, and a test of whether a fast surrogate could stand in for some runs.</li>
     <li><strong>Track 2: Warren County flooding.</strong> A GPU shallow-water model that converts rainfall into depth on roads, buildings and facilities across Bowling Green and the county.</li>
+    <li><strong>Track 3: Field operations.</strong> Storm-spotter work, outreach and search-and-rescue training: how warnings are seen, relayed and acted on.</li>
     <li><strong>The target user:</strong> local emergency management (county / city), who need <em>where</em>, <em>how deep</em>, <em>how sure</em> and <em>what's affected</em>, in a form they can use under time pressure.</li>
   </ul>
   <figure class="fig reveal" style="margin:0 0 22px">
     <img src="assets/img/neighborhood-exposure.webp" width="1440" height="810" loading="lazy" decoding="async" alt="Residential neighborhood in 3-D with simulated ponding, buildings tinted by depth tier and roads with flooded segments in orange">
     <figcaption><b>What an EM product looks like today.</b> Buildings tinted by simulated depth tier and road segments flagged where depth crosses a threshold, 25-year storm, hour 12. This is exactly the kind of view that must not be mistaken for a forecast: the depths are unvalidated. <span class="credit">Contains data © OpenStreetMap contributors.</span></figcaption>
   </figure>
-  <div class="callout info"><strong>Scope note.</strong> The items marked <span class="pill done">done</span> are documented in the public repository or my vault. Items marked <span class="pill plan">plan</span> are intentions, not results. I have not claimed any operational use or partner adoption.</div>
+  <div class="callout info"><strong>Scope note.</strong> The items marked <span class="pill done">done</span> are documented in the public repository, a run log or my own files. Items marked <span class="pill plan">plan</span> are intentions, not results. I have not claimed any operational use or partner adoption.</div>
 </section>
 
 <section id="loop">
   <div class="sec-head"><p class="eyebrow">Method</p><h2>The training loop</h2></div>
   <ol class="steps reveal" aria-label="Seven-stage training loop">
-    <li class="step cool"><b>1 · Learn</b><span>vault notes, CM1 docs, hydrology texts</span></li>
+    <li class="step cool"><b>1 · Learn</b><span>course notes, CM1 docs, hydrology texts</span></li>
     <li class="step cool"><b>2 · Build</b><span>solver, viewers, namelists, tools</span></li>
     <li class="step cool"><b>3 · Verify</b><span>mass balance, tile hashes, unit guards</span></li>
     <li class="step hot"><b>4 · Validate</b><span>against observed events (ev4 …)</span></li>
@@ -84,7 +90,7 @@
     <li class="step"><b>6 · Couple</b><span>NWP rain into the flood solver</span></li>
     <li class="step"><b>7 · Hand off</b><span>EM co-design and guardrails</span></li>
   </ol>
-  <p class="note">↺ Feedback from emergency managers (what they need, what failed, what was unclear) returns to step 1. <strong>Flood model:</strong> steps 1–3 done, first pass of 4. <strong>NWP lab:</strong> curriculum and reference (1–2) done; experiments (3–5) planned.</p>
+  <p class="note">↺ Feedback from emergency managers (what they need, what failed, what was unclear) returns to step 1. <strong>Flood model:</strong> steps 1–3 done, first pass of 4. <strong>NWP lab:</strong> learn and build (1–2) done; a first verify-and-validate pass (3–4) on one CM1 storm, where an emulator beats "nothing changes" by 22 % at +100 s; calibration and ensembles (5–6) planned.</p>
 </section>
 
 <section id="ladder">
@@ -106,18 +112,16 @@
   <div class="sec-head"><p class="eyebrow">Track 1</p><h2>NWP Lab: preparing the severe-storm modeling for EM relevance</h2>
     <p class="muted">The flood model is only as useful as the rainfall that drives it, and EM also cares about wind, tornadoes and lightning. The NWP Lab track builds the atmospheric side: first knowledge, then controlled experiments.</p></div>
 
-  <h3>1. Curriculum mapped onto model controls <span class="pill done">done</span></h3>
-  <p class="muted">My 10-chapter vault (324 notes, 2,654 wikilinks) is organized so each concept lands on something I can set or read in CM1. Full reference: <a href="knowledge-base.html">knowledge base</a> and the <a href="nwp-lab.html#namelist">namelist explorer</a>.</p>
+  <h3>1. What exists so far <span class="pill done">built</span></h3>
+  <p class="muted">Real runs and measured scores on one storm. Details, charts and failures are on the <a href="nwp-lab.html#results">NWP Lab page</a>.</p>
   <div class="tbl-wrap"><table>
-    <thead><tr><th>Concept (vault)</th><th>What I learn to control</th><th>CM1 handle</th></tr></thead>
+    <thead><tr><th>Piece</th><th>Evidence</th><th>What it means for EM</th></tr></thead>
     <tbody>
-      <tr><td>Stability, lapse rates, CAPE / CIN, LCL / LFC / EL (Ch 5)</td><td>Build a thermodynamic environment with a target instability</td><td class="mono">isnd=7 · input_sounding · output_cape/cin/lcl/lfc</td></tr>
-      <tr><td>Bulk shear, SRH, STP, SCP (Ch 5)</td><td>Set the hodograph and check composite parameters</td><td class="mono">input_sounding winds · output_uh</td></tr>
-      <tr><td>Precipitation processes: collision-coalescence, Bergeron-Findeisen (Ch 5)</td><td>Choose how rain and ice are represented</td><td class="mono">ptype 5 / 26 / 27 · ccn · output_dbz</td></tr>
-      <tr><td>Forces, geostrophic and gradient wind (Ch 6)</td><td>Dynamics and numerics choices</td><td class="mono">psolver · icor/fcor · lspgrad · bbc</td></tr>
-      <tr><td>Fronts, air masses, cold pools (Ch 8)</td><td>Initiate and organize convection</td><td class="mono">iinit 2 / 3 / 14 · testcase 18</td></tr>
-      <tr><td>Forecasting and NWP (Ch 9)</td><td>Ensembles, resolution, verification thinking</td><td class="mono">irandp · numrand · dx/dz · restarts</td></tr>
-      <tr><td>Squall lines, QLCS, tornadoes (Ch 10)</td><td>Track hazards inside the simulation</td><td class="mono">output_vort/svs · output_sws · output_rain · testcase 17</td></tr>
+      <tr><td>CM1 r21.1 supercell run</td><td>80 × 80 × 150 cells at 600 m / 100 m, 171 outputs, 283 simulated minutes, finished cleanly</td><td>A real storm exists to learn from, but it is an idealized, high-CAPE case, not an HSLC event</td></tr>
+      <tr><td><code>cm1lab</code> toolkit</td><td>about 5,100 lines of Python, 45 tests; prepare, train, evaluate, predict, ensemble-folder generator</td><td>The pipeline for scoring emulators exists and is repeatable</td></tr>
+      <tr><td>Emulator skill</td><td>+22 % over "nothing changes" at +100 s on held-out times, falling toward zero by +500 s; gate G2 (five times better) not met</td><td>Useful as a research result; far from a replacement for CM1</td></tr>
+      <tr><td>Generalization</td><td>none shown: one storm, validation on later times of the same run</td><td>An emulator can only supply ensemble members if it works on storms it has not seen, so this is the first thing to test</td></tr>
+      <tr><td>Speed</td><td>not measured</td><td>The whole point of an emulator for EM is cheap ensembles, so this must be measured before it is claimed</td></tr>
     </tbody></table></div>
 
   <h3 style="margin-top:26px">2. Research questions <span class="pill plan">plan</span></h3>
@@ -267,6 +271,24 @@ spread  = stack.std(axis=0)                # where members disagree most</code><
     </tbody></table></div>
 </section>
 
+<section id="field">
+  <div class="sec-head"><p class="eyebrow">Track 3</p><h2>Field operations, training &amp; credentials</h2>
+    <p class="muted">Models only matter if the warning chain works. This is the part of my work that happens outside a terminal. It is stated as I describe it; certificate numbers and dates are deliberately not listed here.</p></div>
+  <div class="grid g2">
+    <div class="card"><div class="kicker">NWS SKYWARN</div><h3>Storm-spotter work</h3><p class="muted">Reporting what is actually happening (hail size, wind damage, rotation) to the National Weather Service: the ground truth radar and models are checked against. My BASO MeteoLab portal carries a spotter hail-size reference and a storm-report form.</p></div>
+    <div class="card"><div class="kicker">Weather-Ready Nation</div><h3>Ambassador outreach</h3><p class="muted">Helping people understand forecasts and warnings and what to do about them before the day it matters.</p></div>
+    <div class="card"><div class="kicker">Search &amp; rescue</div><h3>SAR certification training</h3><p class="muted">NASAR SARTECH-track training and FEMA Incident Command System (ICS) courses: how responders organize, communicate and scale an incident.</p></div>
+    <div class="card"><div class="kicker">In the field</div><h3>Severe-weather tracking</h3><p class="muted">Following storms live, with tools I wrote: BG Weather Monitor (Kentucky Mesonet plus NWS alerts for Warren and neighboring counties) and radar and mesoanalysis views in MeteoLab.</p></div>
+  </div>
+  <h3 style="margin-top:26px">Why it sits next to the models</h3>
+  <ul class="tight">
+    <li><strong>Ground truth.</strong> Spotter reports and flood observations are the data the <a href="#data">validation wish-list</a> asks for.</li>
+    <li><strong>Product design.</strong> Seeing how warnings are relayed under time pressure shapes what a flood or storm product has to look like to be usable.</li>
+    <li><strong>Roles.</strong> I model; emergency managers and the NWS decide and warn.</li>
+  </ul>
+  <div class="callout info"><strong>Scope.</strong> This is training and volunteer experience, not an official operational role. Nothing on this site speaks for the NWS, any county agency or any responder organization.</div>
+</section>
+
 <section id="em-questions">
   <div class="sec-head"><p class="eyebrow">Co-design</p><h2>Questions I want emergency managers to answer</h2>
     <p class="muted">The best way to avoid building the wrong product is to ask early. These are the questions I'd bring to a first conversation.</p></div>
@@ -286,7 +308,7 @@ spread  = stack.std(axis=0)                # where members disagree most</code><
     <li><strong>Spatially varying rainfall test:</strong> drive one historical event with gridded rainfall and compare with the uniform-gauge result.</li>
     <li><strong>First CM1 HSLC sensitivity set</strong> (Stage A/B above), then connect its rain-swath output to the flood solver as a process-study demo.</li>
   </ol>
-  <p class="muted">Related: <a href="flood.html">flood model details</a> · <a href="nwp-lab.html">NWP Lab</a> · <a href="knowledge-base.html">knowledge base</a></p>
+  <p class="muted">Related: <a href="flood.html">flood model details</a> · <a href="nwp-lab.html">NWP Lab</a> · <a href="index.html#contact">contact</a></p>
 </section>
 
 </div>

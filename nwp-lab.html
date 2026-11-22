@@ -1,15 +1,17 @@
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="en" class="no-js" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NWP Lab — CM1 Severe-Storm Modeling | Robert G. Lesoski</title>
-<meta name="description" content="CM1 research program on high-shear, low-CAPE convection and QLCS evolution with ZDR-column diagnostics: experiment design, a namelist explorer, and a grid and time-step planner.">
+<title>NWP Lab — CM1 Supercell Runs &amp; Neural Emulators | Robert G. Lesoski</title>
+<meta name="description" content="A real CM1 supercell simulation, cm1lab (a PyTorch toolkit that trains 3-D U-Net emulators on CM1 output), measured results with the failures included, and the research plan for HSLC and ZDR-column experiments.">
 <link rel="canonical" href="https://robertlesoski.github.io/nwp-lab.html">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#0a0d14">
+<meta name="theme-color" content="#0b1120">
 <meta property="og:image" content="https://robertlesoski.github.io/assets/img/og-card.jpg">
-<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/site.css">
 </head>
 <body>
@@ -17,30 +19,37 @@
 <header class="site-header">
   <div class="wrap">
     <a class="brand" href="index.html">robert<b>.</b>lesoski</a>
-    <nav class="nav" aria-label="Primary">
-      <a href="index.html">Home</a>
+    <nav class="nav" id="site-nav" aria-label="Primary">
+      <a href="index.html#work">Work</a>
       <a href="flood.html">Flood model</a>
       <a href="nwp-lab.html" aria-current="page">NWP lab</a>
-      <a href="emergency-management.html">Emergency mgmt</a>
-      <a href="knowledge-base.html">Knowledge base</a>
+      <a href="emergency-management.html">Field &amp; EM</a>
+      <a href="index.html#timeline">Timeline</a>
+      <a href="index.html#contact">Contact</a>
     </nav>
-    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle theme">☾</button>
+    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme" aria-pressed="false">☾</button>
+    <button id="menu-btn" class="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">☰</button>
   </div>
 </header>
 
 <div class="page-hero">
   <div class="wrap">
-    <div class="crumb">home / NWP lab</div>
-    <p class="eyebrow">Numerical weather prediction · CM1 · SVRWx</p>
-    <h1 style="font-size:clamp(30px,4.4vw,46px)">NWP Lab: modeling the storms behind the rain</h1>
-    <p class="lede" style="margin-bottom:0">A research program around Bryan's Cloud Model 1: how severe convection organizes when instability is small but shear is large, what dual-polarization radar signatures reveal early, and how the resulting rain can eventually drive flood models.</p>
+    <div class="crumb"><a href="index.html">home</a> / NWP lab</div>
+    <p class="eyebrow">Numerical weather prediction · CM1 · neural emulators</p>
+    <h1 style="font-size:clamp(30px,4.4vw,46px)">NWP Lab: run the storm, train the emulator, score it honestly</h1>
+    <p class="lede" style="margin-bottom:0">I run Bryan's Cloud Model 1 on a real supercell case, then train 3-D neural networks to step the CM1 state forward and compare them with "nothing changes." The first results are real and modest, they come from one storm, and this page shows the failures next to the wins.</p>
   </div>
 </div>
 
 <main id="main" class="wrap" style="padding-top:36px">
 <div class="with-toc">
 <aside class="toc" aria-label="On this page">
-  <a href="#scope">Scope &amp; status</a>
+  <a href="#scope">Status</a>
+  <a href="#run">The CM1 run</a>
+  <a href="#toolkit">cm1lab toolkit</a>
+  <a href="#results">Results</a>
+  <a href="#limits">Limits &amp; fixes</a>
+  <a href="#next">Next steps</a>
   <a href="#science">The science</a>
   <a href="#design">Experiment design</a>
   <a href="#config">Config sketch</a>
@@ -53,17 +62,179 @@
 <div>
 
 <section id="scope" style="padding-top:0">
-  <div class="callout info"><strong>Status.</strong> The knowledge base and CM1 reference are <span class="pill done">done</span>. The experiments below are a <span class="pill plan">research plan</span>: this page describes design and tooling, not completed results.</div>
-  <div class="grid g3">
-    <div class="card stat"><div class="num">CM1</div><div class="lbl">Bryan's cloud model; reference built against README.namelist (cm1r22.0)</div></div>
-    <div class="card stat"><div class="num">20+</div><div class="lbl">namelist blocks mapped (&amp;param0 … &amp;param23, &amp;nssl2mom_params)</div></div>
-    <div class="card stat"><div class="num">10</div><div class="lbl">course chapters tied to model controls</div></div>
+  <div class="callout info"><strong>Status.</strong> <span class="pill done">built</span> a CM1 r21.1 supercell run, the <code>cm1lab</code> toolkit, and two rounds of trained emulators scored against persistence. <span class="pill plan">research plan</span> ensembles across environments, HSLC and ZDR-column experiments, and coupling to the flood model. <span class="pill limit">not shown</span> that any emulator generalizes beyond the one storm it saw, or that it is faster than CM1 (speed is not measured yet).</div>
+  <div class="grid g4">
+    <div class="card stat"><div class="num">171</div><div class="lbl">CM1 outputs, 100 s apart: 283 simulated minutes of one supercell</div></div>
+    <div class="card stat"><div class="num">4.1<small> M</small></div><div class="lbl">parameters in the best 3-D U-Net, trained on a 4 GB laptop GPU</div></div>
+    <div class="card stat"><div class="num">+22<small> %</small></div><div class="lbl">lower error than "nothing changes" at +100 s on held-out times (dynamics variables)</div></div>
+    <div class="card stat"><div class="num">1</div><div class="lbl">storm. That is the limit that matters most.</div></div>
   </div>
-  <p style="margin-top:20px">I work on this as an independent <strong>SVRWx numerical 3-D modeling</strong> effort alongside my undergraduate research at WKU's DSOC and AI Research Lab. CM1 is a good fit because it is an idealized-to-semi-realistic cloud-resolving model: every physical choice is a namelist switch I can reason about, change one at a time, and trace back to the textbook concept behind it.</p>
+  <p style="margin-top:20px">I work on this as an independent <strong>SVRWx numerical 3-D modeling</strong> effort alongside my undergraduate research at WKU's DSOC and AI Research Lab. CM1 fits because every physical choice is a namelist switch I can change one at a time. The emulator work asks a different question of the same model: how much of CM1's short-range behaviour can a small network learn, and where does it break?</p>
+</section>
+
+<section id="run">
+  <div class="sec-head"><p class="eyebrow">Data</p><h2>The CM1 run the emulators learn from <span class="pill done">built</span></h2>
+    <p class="muted">An idealized supercell in a Weisman–Klemp type environment, run with CM1 r21.1 under WSL2 on my laptop. Everything below is read from the run's own namelist and output.</p></div>
+  <dl class="spec">
+    <dt>model</dt><dd>CM1 r21.1, built with gfortran 13.3, Open MPI 4.1.6 and netCDF 4.9.2 (Ubuntu 24.04 in WSL2), 4 MPI ranks</dd>
+    <dt>grid</dt><dd><code>80 × 80 × 150</code> cells, <code>dx = dy = 600 m</code>, <code>dz = 100 m</code>: a 48 × 48 × 15 km domain that moves with the storm (<code>umove = 12.5</code>, <code>vmove = 3.0</code> m/s)</dd>
+    <dt>physics</dt><dd>Morrison microphysics (<code>ptype = 5</code>), TKE subgrid closure (<code>sgsmodel = 1</code>), 5th-order advection with WENO on scalars, <code>psolver = 3</code>, open lateral boundaries, free-slip lower boundary, constant surface fluxes</dd>
+    <dt>environment</dt><dd>analytic Weisman–Klemp sounding (<code>isnd = 5</code>), warm-bubble initiation (<code>iinit = 1</code>)</dd>
+    <dt>output</dt><dd>every 100 s to <code>timax = 17,000 s</code>: 171 outputs, 8.8 GB of netCDF. Wall time was about 23.5 h on a machine with roughly 3 GB of usable memory in WSL.</dd>
+    <dt>training cache</dt><dd>coarsened 2× horizontally and 3× vertically to <code>40 × 40 × 50</code> (1.2 km × 300 m), 11 variables, 580 MB; split by time into outputs 0–119 (train), 119–153 (validation) and 153–171 (test)</dd>
+  </dl>
+  <div class="grid g3" style="margin-bottom:22px">
+    <div class="card stat"><div class="num">60<small> m/s</small></div><div class="lbl">peak domain-maximum updraft, near minute 65 (on the coarsened cache)</div></div>
+    <div class="card stat"><div class="num">−10<small> K</small></div><div class="lbl">strongest surface cold-pool temperature deficit</div></div>
+    <div class="card stat"><div class="num">31<small> m/s</small></div><div class="lbl">0–6 km bulk shear of the base-state wind profile</div></div>
+  </div>
+  <figure class="fig vid reveal" style="max-width:1040px">
+    <video controls muted loop playsinline preload="none" data-autoplay width="1280" height="720" poster="assets/img/cm1-supercell-poster.webp">
+      <source src="assets/video/cm1-supercell.mp4" type="video/mp4">
+      Your browser can't play this video. <a href="assets/video/cm1-supercell.mp4">Download the clip</a>.
+    </video>
+    <figcaption><b>Real CM1 output, not an illustration.</b> Composite reflectivity, vertical velocity at 4.95 km and the surface cold pool across all 283 simulated minutes. The domain moves with the storm. Frames are linearly interpolated between the 100 s outputs for smoothness, on the 1.2 km training cache.</figcaption>
+  </figure>
+  <div class="grid" style="margin-top:22px;gap:26px">
+    <figure class="fig reveal" data-fallback data-missing="" style="max-width:760px">
+      <button class="lb" type="button" aria-label="Enlarge: 3-D cloud render of a CM1 supercell"><img src="assets/img/cm1-full-clouds.webp" width="1600" height="801" loading="lazy" decoding="async" alt="VisIt volume rendering of cloud water from a CM1 supercell, showing the updraft column and spreading anvil"></button>
+      <figcaption><b>3-D structure.</b> Cloud-water volume rendering at 9,000 s (VisIt) from an earlier run of the same setup: updraft column below, anvil outflow above.</figcaption>
+    </figure>
+    <div>
+      <div class="chartbox"><div id="c-base"></div></div>
+      <p class="cap">Base-state environment read from the run's cache: the wind turns and strengthens with height, about 31 m/s of bulk shear over the lowest 6 km. Winds shown relative to the ground (the run's motion is added back).</p>
+    </div>
+  </div>
+  <div class="chartbox" style="margin-top:22px"><div id="c-storm"></div></div>
+  <p class="cap">The storm intensifies, then keeps cycling. Validation and test are <em>later times of the same storm</em>, which is easier than a different storm. Keep that in mind for every number below.</p>
+</section>
+
+<section id="toolkit">
+  <div class="sec-head"><p class="eyebrow">Software</p><h2><code>cm1lab</code>: a toolkit for training emulators on CM1 output <span class="pill done">built</span></h2>
+    <p class="muted">About 5,100 lines of Python and 45 tests, with a command line and a small GUI. A physics emulator toolkit, not a chatbot: the networks learn only from CM1 data.</p></div>
+  <ol class="steps five reveal" aria-label="cm1lab pipeline">
+    <li class="step cool"><b>prepare</b><span>reads netCDF, GrADS or npz; coarsens; builds a memory-mapped cache and per-level statistics</span></li>
+    <li class="step cool"><b>train</b><span>history frames + base state + conditioning in; next frame out; rollout curriculum 1 → 3 steps</span></li>
+    <li class="step cool"><b>eval</b><span>rollouts on held-out times scored in physical units against persistence</span></li>
+    <li class="step cool"><b>predict</b><span>autoregressive rollout written as CM1-style netCDF or GrADS</span></li>
+    <li class="step hot"><b>make-ensemble</b><span>writes CM1 run folders and a Slurm script; it does not run CM1 <span class="pill plan">not yet used</span></span></li>
+  </ol>
+  <div class="grid g2" style="margin-top:22px">
+    <div class="card">
+      <div class="kicker">Models</div>
+      <ul class="tight" style="max-width:none">
+        <li><code>unet3d</code> (default): 3-D U-Net with FiLM conditioning; 1.8 M or 4.1 M parameters here</li>
+        <li><code>fno3d</code>: Fourier neural operator, for smooth, periodic-ish fields</li>
+        <li><code>transformer3d</code>: patch transformer, for more data and memory</li>
+        <li><code>pointwise</code>: per-cell network, aimed at emulating a microphysics scheme alone</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="kicker">Training recipe</div>
+      <ul class="tight" style="max-width:none">
+        <li>patch 16 × 32 × 32, batch 2, learning rate 3 × 10⁻⁴, mixed precision, EMA 0.99</li>
+        <li>predict <code>last_frame + scale × f(…)</code>; input noise for rollout robustness</li>
+        <li>loss: weighted MSE + gradient + spectral terms; divergence, positivity and total-water terms available</li>
+        <li>about 10 minutes (1.8 M) or 16 epochs × 58 s (4.1 M) on a GTX 1650 with 4 GB</li>
+      </ul>
+    </div>
+  </div>
+  <p style="margin-top:18px">I also wrote a standalone trainer that learns <em>while CM1 is still running</em>, reading each new output as it appears. It is how I first measured against the gate in the planning documents (G2: validation MSE at most 0.2 of persistence's, i.e. five times better). See the live-training chart below.</p>
+</section>
+
+<section id="results">
+  <div class="sec-head"><p class="eyebrow">Measured</p><h2>Results on held-out times of one storm</h2>
+    <p class="muted"><strong>Skill</strong> = 1 − RMSE(emulator) / RMSE(persistence), in physical units, where persistence assumes nothing changes from the last frame. +0.22 means 22 % lower error; below zero is worse than doing nothing. Each step is 100 s.</p></div>
+
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Model (run 2)</th><th>Split</th><th class="num">Dynamics +100 s</th><th class="num">Dynamics +500 s</th><th class="num">Hydromet. +100 s</th><th class="num">Hydromet. +500 s</th><th class="num">w +100 s</th><th class="num">Total-water error</th></tr></thead>
+    <tbody>
+      <tr><td>1.8 M parameters</td><td>validation</td><td class="num">+0.13</td><td class="num">+0.06</td><td class="num">+0.06</td><td class="num">+0.01</td><td class="num">+0.28</td><td class="num">−4.8 %</td></tr>
+      <tr><td><b>4.1 M, dropout 0.1, weight decay 0.05</b></td><td>validation</td><td class="num pos">+0.22</td><td class="num pos">+0.09</td><td class="num pos">+0.14</td><td class="num pos">+0.11</td><td class="num pos">+0.37</td><td class="num">−4.0 %</td></tr>
+      <tr><td>1.8 M parameters</td><td>test</td><td class="num">+0.14</td><td class="num">+0.10</td><td class="num">+0.05</td><td class="num">+0.02</td><td class="num">+0.29</td><td class="num">−5.9 %</td></tr>
+      <tr><td><b>4.1 M, dropout 0.1, weight decay 0.05</b></td><td>test</td><td class="num pos">+0.22</td><td class="num pos">+0.11</td><td class="num pos">+0.14</td><td class="num pos">+0.12</td><td class="num pos">+0.36</td><td class="num">−6.3 %</td></tr>
+    </tbody></table></div>
+  <p class="cap" style="margin-top:-8px">Dynamics = u, v, w, θ, pressure; hydrometeors = qc, qr, qi, qs, qg. Five-step rollouts from four starting times per split. I re-ran this comparison on 22 Nov 2026; the earlier project handoff listed it as not yet verified.</p>
+
+  <div class="grid" style="gap:30px;margin-top:26px">
+    <div><h3>Skill by training epoch</h3><div class="chartbox"><div id="c-curves"></div></div>
+      <p class="cap">Run 1 used 113 outputs and no regularization; the larger model overfit. Run 2 used 171 outputs, dropout and weight decay, and the larger model won. The rollout horizon steps up 1 → 2 → 3 during training, so curves jump when the task gets harder.</p></div>
+    <div><h3>Skill by variable</h3><div class="chartbox"><div id="c-var"></div></div>
+      <p class="cap">Validation period. Vertical velocity (+0.37) and potential temperature (+0.30) gain most at +100 s; pressure (+0.05) and rain (+0.02) gain almost nothing.</p></div>
+  </div>
+
+  <div class="grid" style="gap:30px;margin-top:30px">
+    <div><h3>Skill decays with lead time</h3><div class="chartbox"><div id="c-lead"></div></div>
+      <p class="cap">Larger model, validation. Skill decays with lead time (w from +0.37 to +0.16, θ from +0.30 to +0.02); rain and pressure never gain much and end near zero. Every variable stays slightly above zero for this model, which the first-run larger model did not manage.</p></div>
+    <div><h3>Skill by lead, all variables</h3>
+      <div class="tbl-wrap" style="margin-bottom:0"><table>
+        <thead><tr><th>Variable</th><th class="num">+100 s</th><th class="num">+200 s</th><th class="num">+300 s</th><th class="num">+400 s</th><th class="num">+500 s</th></tr></thead>
+        <tbody id="tbl-skill"></tbody></table></div></div>
+  </div>
+
+  <div class="grid" style="gap:30px;margin-top:30px">
+    <figure class="fig reveal" style="max-width:640px">
+      <button class="lb" type="button" aria-label="Enlarge: emulator versus CM1 fields"><img src="assets/img/emu-eval-fields.webp" width="947" height="1058" loading="lazy" decoding="async" alt="Four rows of three maps at model level 16 comparing CM1, the emulator and their difference for vertical velocity, rain, potential temperature and u wind"></button>
+      <figcaption><b>Where it is right and wrong.</b> CM1 (left), the larger emulator (middle) and the difference (right) at 4.95 km after five steps, from the evaluation report. The updraft and rain core land in the right place; the peaks are smoothed and weaker.</figcaption>
+    </figure>
+    <figure class="fig reveal">
+      <button class="lb" type="button" aria-label="Enlarge: emulator diagnostics"><img src="assets/img/emu-eval-diagnostics.webp" width="1195" height="400" loading="lazy" decoding="async" alt="Three charts: maximum vertical velocity for CM1 and the emulator, relative total-water error by step, and the kinetic-energy spectrum ratio by wavenumber"></button>
+      <figcaption><b>Diagnostics beyond RMSE.</b> The emulator under-predicts the peak updraft, drifts about 4 % low in total water by step 5, and carries well under CM1's small-scale kinetic energy (about 0.3 of it at mid wavenumbers for the larger model, about 0.5 for the smaller). Better pointwise skill came with <em>more</em> smoothing.</figcaption>
+    </figure>
+    <div><h3>Live-trained emulator against the gate</h3><div class="chartbox"><div id="c-online"></div></div>
+      <p class="cap">A 0.81 M-parameter U-Net trained <em>while CM1 was still running</em> and validated on the newest outputs: stuck near an MSE ratio of 0.6, about three times short of the 0.2 gate. The ratio is relative to "nothing changes" (1.0).</p></div>
+  </div>
+
+  <figure class="fig vid reveal" style="max-width:1040px;margin-top:30px">
+    <video controls muted loop playsinline preload="none" data-autoplay width="1280" height="720" poster="assets/img/emulator-vs-cm1-poster.webp">
+      <source src="assets/video/emulator-vs-cm1.mp4" type="video/mp4">
+      Your browser can't play this video. <a href="assets/video/emulator-vs-cm1.mp4">Download the clip</a>.
+    </video>
+    <figcaption><b>One held-out rollout, step by step.</b> Starting from the CM1 state at 12,500 s, the larger emulator predicts the next ten outputs (1,000 s). Left is CM1, middle the emulator, right the difference, for w and rain at 4.95 km. In this single case skill for w is +0.34 at step 1, falls to about +0.05 by step 8, and the emulator's domain-maximum w stays between 35 and 40 m/s while CM1's reaches nearly 49 by step 10. One case, not a benchmark; the emulator output is <b>not</b> a CM1 simulation.</figcaption>
+  </figure>
+</section>
+
+<section id="limits">
+  <div class="sec-head"><p class="eyebrow">Read before citing</p><h2>What this does not show, and what broke along the way</h2></div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="kicker">Limits</div>
+      <ul class="tight" style="max-width:none">
+        <li><strong>One storm.</strong> Validation and test are later times of the same simulation. A different environment would score worse, and I have not measured by how much.</li>
+        <li><strong>Gate G2 is not met.</strong> +0.22 skill is an MSE ratio near 0.6, about three times above the 0.2 target. The live trainer agrees.</li>
+        <li><strong>Short horizons only.</strong> Five steps, 500 s. By then θ has almost no skill left, and rain and pressure never had much.</li>
+        <li><strong>Smoothing.</strong> Small-scale energy and peak updrafts are under-represented.</li>
+        <li><strong>Coarsened data.</strong> The cache is 1.2 km × 300 m, not the 600 m × 100 m the run was made at.</li>
+        <li><strong>Speed is unmeasured.</strong> I have no emulator-versus-CM1 timing yet, so I make no speed-up claim.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="kicker">Bugs and fixes, in order</div>
+      <ol class="tight" style="max-width:none">
+        <li>Validation loss exploded at rollout length 3: near-empty levels had a tiny standard deviation, so later values became "12,000-sigma" outliers. Fixed with a per-level floor at 0.25× the variable's overall spread, clipping at ±20 and clamping rollouts at ±8.</li>
+        <li>A <code>log1p(q / 10⁻⁶)</code> hydrometeor transform turned small errors into ~18× errors in physical mixing ratio. Using 10⁻⁴ cut hydrometeor error and total-water drift sharply.</li>
+        <li>The GUI read tkinter fields from a worker thread; a test that drove the GUI found it.</li>
+        <li>The larger model overfit the first run (training loss well below validation). More data plus dropout, weight decay and early stopping reversed that on the second run.</li>
+        <li>Reading a live <code>cm1out.nc</code> hit HDF5 file locks; the trainer copies the file first.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section id="next">
+  <div class="sec-head"><p class="eyebrow">Roadmap</p><h2>Next steps <span class="pill plan">plan</span></h2>
+    <p class="muted">Ordered by how much each would change what the numbers mean.</p></div>
+  <ol class="tight" style="max-width:none">
+    <li><strong>An ensemble of CM1 runs</strong> across instability, shear and moisture so validation can split <em>by run</em>, which is the honest test of generalization. <code>cm1lab make-ensemble</code> already writes the run folders and a Slurm script; I have not launched an ensemble yet.</li>
+    <li><strong>Measure speed and baselines.</strong> Time an emulator rollout against CM1 on the same hardware, and add a simple non-ML baseline beside persistence.</li>
+    <li><strong>Longer, sharper rollouts.</strong> Stronger spectral and conservation terms, noise injection, and possibly a sharpening head, judged by object and spectral scores, not RMSE alone.</li>
+    <li><strong>The HSLC and ZDR-column program</strong> below: environments chosen on purpose, with a polarimetric forward operator to turn CM1 output into a ZDR proxy (CM1 does not output ZDR itself).</li>
+    <li><strong>Rain for the flood model.</strong> Cheaper storm ensembles are only useful to emergency management if their rainfall can drive the flood solver; see the <a href="emergency-management.html#bridge">NWP → flood bridge</a>.</li>
+  </ol>
 </section>
 
 <section id="science">
-  <div class="sec-head"><p class="eyebrow">Research questions</p><h2>The science</h2></div>
+  <div class="sec-head"><p class="eyebrow">Research questions</p><h2>The science <span class="pill plan">research plan</span></h2></div>
   <div class="grid" style="gap:22px;max-width:860px">
     <figure class="fig reveal">
       <img src="assets/img/hslc-regime-schematic.svg" width="1000" height="560" loading="lazy" decoding="async" alt="Regime map of CAPE versus 0 to 6 kilometer shear with the high-shear low-CAPE region shaded and labeled HSLC">
@@ -80,6 +251,7 @@
     <li><strong>Operational features.</strong> Investigate other dual-polarization features that could improve real-time tracking and forecasting of QLCS evolution and severe hazards.</li>
     <li><strong>Real-event reconstruction.</strong> Simulate specific events (a derecho case among them) and run selected tornado cases in high detail.</li>
   </ol>
+  <p class="note">The supercell run above is a high-CAPE, high-shear case. It is the testbed for the tooling, not yet an HSLC result.</p>
 </section>
 
 <section id="design">
@@ -110,7 +282,7 @@
 
 <section id="config">
   <div class="sec-head"><p class="eyebrow">Starting point</p><h2>Config sketch</h2>
-    <p class="muted">An excerpt for an idealized supercell/QLCS-style run on a sounding file. Parameter names and values follow the namelist reference; everything else keeps the defaults in the config files that ship with CM1. It is a starting point, not a validated configuration.</p></div>
+    <p class="muted">An excerpt for an idealized supercell/QLCS-style run on a sounding file. Parameter names and values follow the namelist reference; everything else keeps the defaults in the config files that ship with CM1. It is a starting point, not a validated configuration, and it is not the namelist of the run above (that one uses the analytic <code>isnd = 5</code> sounding at 600 m / 100 m).</p></div>
 <pre class="code"><code>&amp;param0
   nx = 400,  ny = 400,  nz = 60,
  /
@@ -147,7 +319,7 @@
         <source src="assets/video/bubble.mp4" type="video/mp4">
         Your browser can't play this video. <a href="assets/video/bubble.mp4">Download the clip</a>.
       </video>
-      <figcaption><b>The classic first test.</b> A 2 K warm bubble released in a neutral atmosphere rises and rolls up into a thermal. This is a small 2-D Boussinesq vorticity&ndash;streamfunction toy I wrote to build intuition (pseudo-spectral, RK4, 31 m grid) <b>and is not CM1 output</b>. CM1 ships the full 3-D compressible version of this test, which is the right smoke test for any new build or namelist.</figcaption>
+      <figcaption><b>The classic first test (a toy).</b> A 2 K warm bubble released in a neutral atmosphere rises and rolls up into a thermal. This is a small 2-D Boussinesq vorticity&ndash;streamfunction toy I wrote to build intuition (pseudo-spectral, RK4, 31 m grid) <b>and is not CM1 output</b>. The real CM1 runs are the clips above.</figcaption>
     </figure>
 </section>
 
@@ -194,6 +366,8 @@
     <li><code>bbc = 3</code> (drag) needs <code>sfcmodel ≥ 1</code> and the &amp;param12 settings; <code>bbc = 1</code> free-slip is the idealized default.</li>
     <li>Moist runs need <code>imoist = 1</code> plus a <code>ptype</code>; <code>ihail</code> only matters for ptype 2 / 5.</li>
     <li>Old <code>iturb</code> is gone: use <code>sgsmodel</code> / <code>horizturb</code>.</li>
+    <li>Do not read <code>cm1out.nc</code> while CM1 is still writing it (HDF5 locks); copy it first.</li>
+    <li>Run each case in a fresh directory: the launch script deletes earlier <code>cm1out_*</code> files.</li>
   </ol>
 </section>
 
@@ -207,7 +381,7 @@
       <label class="f">Env. lapse rate (°C/km)<input id="lc-elr" type="number" step="0.1" value="7.5"></label>
     </div>
     <div class="out" id="lc-out"></div>
-    <p class="note">LCL ≈ 125 m × (T − T<sub>d</sub>). Stability by comparing the environmental lapse rate with the dry (9.8 °C/km) and moist (≈ 6 °C/km average) adiabatic rates: ELR &gt; DALR is absolutely unstable, ELR &lt; MALR absolutely stable, in between conditionally unstable. (Correcting the order <em>ELR &gt; DALR &gt; MALR</em> was one of the fixes logged in my notes.)</p>
+    <p class="note">LCL ≈ 125 m × (T − T<sub>d</sub>). Stability by comparing the environmental lapse rate with the dry (9.8 °C/km) and moist (≈ 6 °C/km average) adiabatic rates: ELR &gt; DALR is absolutely unstable, ELR &lt; MALR absolutely stable, in between conditionally unstable.</p>
   </div>
 </section>
 
@@ -228,8 +402,8 @@
 
 <section id="em">
   <div class="sec-head"><p class="eyebrow">Why this matters downstream</p><h2>Link to emergency management</h2></div>
-  <p>The rain swath a storm produces is the missing forcing for my flood model, which today assumes uniform rain from one gauge. The plan is to use simulated and observed rainfall fields as spatially varying input, run ensembles, and report probabilities. The honest path, with a readiness ladder and guardrails, is on the <a href="emergency-management.html">emergency-management page</a>.</p>
-  <p class="cta"><a class="btn primary" href="emergency-management.html#bridge">See the NWP → flood bridge</a><a class="btn" href="knowledge-base.html">Open the knowledge base</a></p>
+  <p>The rain swath a storm produces is the missing forcing for my flood model, which today assumes uniform rain from one gauge. The plan is to use simulated and observed rainfall fields as spatially varying input, run ensembles, and report probabilities. Fast emulators matter here only if they are trustworthy, which is why the first thing I publish about them is their limits. The honest path, with a readiness ladder and guardrails, is on the <a href="emergency-management.html">emergency-management page</a>.</p>
+  <p class="cta"><a class="btn primary" href="emergency-management.html#bridge">See the NWP → flood bridge</a><a class="btn" href="flood.html">Open the flood model</a></p>
 </section>
 
 </div>
@@ -238,9 +412,11 @@
 
 <footer class="site-footer"><div class="wrap">
   <p>© <span id="yr">2026</span> Robert G. Lesoski · Western Kentucky University</p>
-  <p>Namelist reference paraphrased from George Bryan's CM1 documentation (NCAR MMM). Schematics are conceptual, not data.</p>
+  <p>Namelist reference paraphrased from George Bryan's CM1 documentation (NCAR MMM). Schematics and toys are labeled as such; emulator output is not CM1 output.</p>
 </div></footer>
 <script src="assets/js/site.js"></script>
+<script src="assets/js/emu-data.js"></script>
+<script src="assets/js/emu.js"></script>
 <script src="assets/js/tools.js"></script>
 <script>
 (function(){

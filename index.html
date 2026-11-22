@@ -1,28 +1,30 @@
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="en" class="no-js" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Robert G. Lesoski — Meteorology, Numerical Modeling &amp; Flood Hazard Research</title>
-<meta name="description" content="Meteorology undergraduate at Western Kentucky University. Severe-convection modeling with CM1, GPU flood hydrodynamics for Warren County, KY, and decision support for emergency management.">
+<meta name="description" content="Meteorology undergraduate at Western Kentucky University. Severe-convection modeling with CM1 and neural emulators, GPU flood hydrodynamics for Warren County, KY, weather software, and field readiness for emergency management.">
 <link rel="canonical" href="https://robertlesoski.github.io/">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#0a0d14">
+<meta name="theme-color" content="#0b1120">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Robert G. Lesoski — Meteorology, Numerical Modeling &amp; Flood Hazard Research">
-<meta property="og:description" content="CM1 severe-convection modeling, a 125-million-cell GPU flood model of Warren County, KY, and a readiness path toward emergency-management decision support.">
+<meta property="og:description" content="CM1 severe-convection modeling and neural emulators, a 125-million-cell GPU flood model of Warren County, KY, and a readiness path toward emergency-management decision support.">
 <meta property="og:url" content="https://robertlesoski.github.io/">
 <meta property="og:image" content="https://robertlesoski.github.io/assets/img/og-card.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://robertlesoski.github.io/assets/img/og-card.jpg">
-<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/site.css">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"Person","name":"Robert G. Lesoski","url":"https://robertlesoski.github.io/",
  "affiliation":[{"@type":"CollegeOrUniversity","name":"Western Kentucky University"}],
- "jobTitle":"Undergraduate Researcher","knowsAbout":["Meteorology","Numerical weather prediction","Cloud Model 1","Flood hydrodynamics","Emergency management"],
+ "jobTitle":"Undergraduate Researcher","knowsAbout":["Meteorology","Numerical weather prediction","Cloud Model 1","Neural emulators","Flood hydrodynamics","Emergency management"],
  "sameAs":["https://github.com/RobertLesoski","https://www.linkedin.com/in/robert-lesoski-8817a6209/"]}
 </script>
 </head>
@@ -32,14 +34,16 @@
 <header class="site-header">
   <div class="wrap">
     <a class="brand" href="index.html">robert<b>.</b>lesoski</a>
-    <nav class="nav" aria-label="Primary">
-      <a href="index.html" aria-current="page">Home</a>
+    <nav class="nav" id="site-nav" aria-label="Primary">
+      <a href="#work" data-spy="work">Work</a>
       <a href="flood.html">Flood model</a>
       <a href="nwp-lab.html">NWP lab</a>
-      <a href="emergency-management.html">Emergency mgmt</a>
-      <a href="knowledge-base.html">Knowledge base</a>
+      <a href="emergency-management.html">Field &amp; EM</a>
+      <a href="#timeline" data-spy="timeline">Timeline</a>
+      <a href="#contact" data-spy="contact">Contact</a>
     </nav>
-    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle theme">☾</button>
+    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme" aria-pressed="false">☾</button>
+    <button id="menu-btn" class="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">☰</button>
   </div>
 </header>
 
@@ -47,35 +51,40 @@
 
 <!-- ================= HERO ================= -->
 <div class="hero">
-  <canvas id="flow" aria-hidden="true"></canvas>
+  <div class="hero-bg" aria-hidden="true"></div>
+  <div class="hero-grid-bg" aria-hidden="true"></div>
   <div class="wrap">
     <div>
       <p class="eyebrow">Meteorology · Numerical modeling · Hazard science</p>
       <h1>I model the atmosphere,<br><span class="grad">then the water it drops.</span></h1>
-      <p class="lede">Meteorology undergraduate at Western Kentucky University. I run severe-convection simulations in CM1, build GPU flood models for Warren County, Kentucky, and work toward making both useful — and honestly labeled — for emergency management.</p>
+      <p class="lede">Meteorology undergraduate at Western Kentucky University. I run severe-convection simulations in CM1, train neural emulators on the output, build GPU flood models for Warren County, Kentucky, and work toward making all of it useful, and honestly labeled, for emergency management.</p>
       <div class="cta">
-        <a class="btn primary" href="emergency-management.html">Emergency-management training →</a>
+        <a class="btn primary" href="https://github.com/RobertLesoski" rel="noopener">GitHub</a>
+        <a class="btn" href="#contact">Contact</a>
         <a class="btn" href="flood.html">Flood model deep-dive</a>
-        <a class="btn" href="https://github.com/RobertLesoski" rel="noopener">GitHub</a>
+        <a class="btn" href="emergency-management.html">Emergency-management training →</a>
       </div>
     </div>
     <div class="term" role="img" aria-label="Profile summary as a YAML snippet">
 <div class="term-bar"><i></i><i></i><i></i><span>~/profile.yml</span></div>
 <pre><span class="k">name</span>: <span class="s">Robert G. Lesoski</span>
 <span class="k">school</span>: <span class="s">Western Kentucky University</span>
-<span class="k">program</span>: <span class="s">Meteorology</span>
+<span class="k">program</span>: <span class="s">Meteorology · EEAS</span>
 <span class="k">labs</span>:
   - <span class="s">DSOC</span>  <span class="c"># Disaster Science Operations Center</span>
   - <span class="s">AIR</span>   <span class="c"># AI Research Lab</span>
 <span class="k">independent</span>: <span class="s">SVRWx 3-D numerical modeling</span>
 <span class="k">models</span>:
-  - <span class="p">CM1</span>            <span class="c"># Bryan's cloud model</span>
-  - <span class="p">local-inertial</span>  <span class="c"># 2-D GPU flood solver</span>
+  - <span class="p">CM1 r21.1</span>      <span class="c"># Bryan's cloud model</span>
+  - <span class="p">cm1lab U-Net</span>   <span class="c"># neural emulator of CM1</span>
+  - <span class="p">local-inertial</span> <span class="c"># 2-D GPU flood solver</span>
 <span class="k">compute</span>: <span class="s">TACC Vista (H100) · Slurm arrays</span>
+<span class="k">crs</span>: <span class="s">UTM 16N · EPSG:26916</span>
 <span class="k">focus</span>:
   - <span class="n">HSLC</span> convection &amp; <span class="n">ZDR</span> columns
   - <span class="n">QLCS</span> evolution
   - pluvial flood hazard, Warren Co. KY
+<span class="k">goal</span>: <span class="s">Ph.D., mesoscale dynamics + AI-constrained NWP</span>
 <span class="k">status</span>: <span class="r">research prototype, not validated</span></pre>
     </div>
   </div>
@@ -87,16 +96,20 @@
     <div class="card stat reveal"><div class="num">125<small> M cells</small></div><div class="lbl">Warren County flood grid, 5 m, one H100 per storm</div></div>
     <div class="card stat reveal"><div class="num">12</div><div class="lbl">storm scenarios: 6 NOAA Atlas 14 design storms + 6 historical gauge replays</div></div>
     <div class="card stat reveal"><div class="num">≤ 1<small> cm</small></div><div class="lbl">COG tile error vs. solver rasters (99th pct, 22,421 points)</div></div>
-    <div class="card stat reveal"><div class="num">324<small> notes</small></div><div class="lbl">linked meteorology vault, 2,654 wikilinks, 10 chapters</div></div>
+    <div class="card stat reveal"><div class="num">22<small> %</small></div><div class="lbl">emulator error below "nothing changes" at +100 s (4.1 M-parameter U-Net, held-out times of one CM1 supercell)</div></div>
   </div>
 </section>
 
 <!-- ================= MEDIA BAND ================= -->
 <section class="media-band" style="padding:0 0 56px">
-  <div class="wrap">
+  <div class="wrap grid g2" style="gap:22px;align-items:start">
     <figure class="fig reveal">
-      <img src="assets/img/warren-overview-25yr-h12.webp" width="1024" height="576" decoding="async" alt="Oblique 3-D view of Warren County terrain with the Barren River meanders and simulated 25-year-storm water shown in blue">
+      <button class="lb" type="button" aria-label="Enlarge: Warren County terrain with simulated flood water"><img src="assets/img/warren-overview-25yr-h12.webp" width="1024" height="576" decoding="async" alt="Oblique 3-D view of Warren County terrain with the Barren River meanders and simulated 25-year-storm water shown in blue"></button>
       <figcaption><b>Warren County, Kentucky.</b> LiDAR / 3DEP terrain with simulated 25-year-storm water at hour 12, rendered in my native desktop viewer. Research model output, not validated. <span class="credit">Terrain: USGS 3DEP and KyFromAbove. Contains data © OpenStreetMap contributors where roads and buildings appear.</span></figcaption>
+    </figure>
+    <figure class="fig reveal" data-fallback data-missing="">
+      <button class="lb" type="button" aria-label="Enlarge: 3-D cloud render of the CM1 supercell"><img src="assets/img/cm1-full-clouds.webp" width="1600" height="801" decoding="async" alt="VisIt volume rendering of cloud water from a CM1 supercell simulation, showing the updraft column and the spreading anvil"></button>
+      <figcaption><b>A CM1 supercell, 3-D.</b> Volume rendering of cloud water (and a wind overlay) from one of my CM1 r21.1 runs at 9,000 s, made in VisIt. This is the storm my emulators learn from. <span class="credit">Idealized supercell run; not a forecast.</span></figcaption>
     </figure>
   </div>
 </section>
@@ -104,8 +117,8 @@
 <!-- ================= IN MOTION ================= -->
 <section id="motion" style="padding:0 0 56px">
   <div class="wrap">
-    <div class="sec-head reveal"><p class="eyebrow">In motion</p><h2>Real footage, and two models for intuition</h2>
-      <p class="muted">The first clip is a real recording from my flood viewer. The other two are small simulations or illustrations I made to build intuition, and each caption says so. Click play on the first; the other two play muted while in view.</p></div>
+    <div class="sec-head reveal"><p class="eyebrow">In motion</p><h2>Real footage, real model output, and two toys for intuition</h2>
+      <p class="muted">The first three clips are real: my flood viewer, a CM1 supercell, and an emulator rollout compared with CM1. The last two are small illustrations I made to build intuition, and each caption says which is which.</p></div>
     <figure class="fig vid reveal" style="max-width:1040px;margin-bottom:26px">
       <video controls muted loop playsinline preload="none" width="1280" height="720" poster="assets/img/ev6-tour-poster.webp">
         <source src="assets/video/ev6-tour.mp4" type="video/mp4">
@@ -115,44 +128,63 @@
     </figure>
     <div class="vgrid">
       <figure class="fig vid reveal">
-      <video controls muted loop playsinline preload="none" data-autoplay width="1024" height="576" poster="assets/img/bubble-poster.webp">
-        <source src="assets/video/bubble.mp4" type="video/mp4">
-        Your browser can't play this video. <a href="assets/video/bubble.mp4">Download the clip</a>.
-      </video>
-      <figcaption><b>Warm-bubble toy</b> (2-D Boussinesq, not CM1 output): a thermal rises and rolls up.</figcaption>
-    </figure>
+        <video controls muted loop playsinline preload="none" data-autoplay width="1280" height="720" poster="assets/img/cm1-supercell-poster.webp">
+          <source src="assets/video/cm1-supercell.mp4" type="video/mp4">
+          Your browser can't play this video. <a href="assets/video/cm1-supercell.mp4">Download the clip</a>.
+        </video>
+        <figcaption><b>Real CM1 output.</b> The supercell the emulators train on: composite reflectivity, updraft at 4.95 km and the surface cold pool, 283 simulated minutes.</figcaption>
+      </figure>
       <figure class="fig vid reveal">
-      <video controls muted loop playsinline preload="none" data-autoplay width="1024" height="576" poster="assets/img/ensemble-poster.webp">
-        <source src="assets/video/ensemble.mp4" type="video/mp4">
-        Your browser can't play this video. <a href="assets/video/ensemble.mp4">Download the clip</a>.
-      </video>
-      <figcaption><b>Ensemble exceedance</b> (synthetic numbers): many runs become one probability.</figcaption>
-    </figure>
+        <video controls muted loop playsinline preload="none" data-autoplay width="1280" height="720" poster="assets/img/emulator-vs-cm1-poster.webp">
+          <source src="assets/video/emulator-vs-cm1.mp4" type="video/mp4">
+          Your browser can't play this video. <a href="assets/video/emulator-vs-cm1.mp4">Download the clip</a>.
+        </video>
+        <figcaption><b>Emulator vs CM1</b> on held-out times: 10 steps of 100 s. One case, not a benchmark; it under-predicts the strongest updraft.</figcaption>
+      </figure>
+      <figure class="fig vid reveal">
+        <video controls muted loop playsinline preload="none" data-autoplay width="1024" height="576" poster="assets/img/bubble-poster.webp">
+          <source src="assets/video/bubble.mp4" type="video/mp4">
+          Your browser can't play this video. <a href="assets/video/bubble.mp4">Download the clip</a>.
+        </video>
+        <figcaption><b>Warm-bubble toy</b> (2-D Boussinesq, not CM1 output): a thermal rises and rolls up.</figcaption>
+      </figure>
+      <figure class="fig vid reveal">
+        <video controls muted loop playsinline preload="none" data-autoplay width="1024" height="576" poster="assets/img/ensemble-poster.webp">
+          <source src="assets/video/ensemble.mp4" type="video/mp4">
+          Your browser can't play this video. <a href="assets/video/ensemble.mp4">Download the clip</a>.
+        </video>
+        <figcaption><b>Ensemble exceedance</b> (synthetic numbers): many runs become one probability.</figcaption>
+      </figure>
     </div>
   </div>
 </section>
 
 <!-- ================= ABOUT ================= -->
 <section id="about">
-  <div class="wrap grid g2" style="gap:40px">
+  <div class="wrap grid g2" style="gap:44px">
     <div class="reveal">
       <p class="eyebrow">About</p>
       <h2>What I work on</h2>
-      <p>I'm a meteorology undergraduate in Bowling Green, Kentucky. I work as an undergraduate researcher in WKU's <strong>Disaster Science Operations Center (DSOC)</strong> and <strong>AI Research Lab (AIR)</strong>, and independently on <strong>SVRWx</strong>, a numerical 3-D modeling effort for severe weather.</p>
+      <p>I'm a meteorology undergraduate in Bowling Green, Kentucky, enrolled in WKU's <strong>Department of Earth, Environmental, and Atmospheric Sciences (EEAS)</strong>. I work as an undergraduate researcher in WKU's <strong>Disaster Science Operations Center (DSOC)</strong> and <strong>AI Research Lab (AIR)</strong>, and independently on <strong>SVRWx</strong>, a numerical 3-D modeling effort for severe weather.</p>
       <p>The through-line is <em>hazard physics you can compute</em>: how a storm organizes (instability, shear, microphysics), how its rain turns into runoff, and how that runoff reaches roads, buildings and critical facilities. I care as much about the <strong>uncertainty labels</strong> as the model: every flood product I publish says what it can't do.</p>
-      <p class="muted">Everything on this site traces to a public repository, a documented run, or my own study notes. Where something is a plan, it says <span class="pill plan">plan</span>.</p>
+      <p>Before WKU I founded and led the <strong>Blazer Atmospheric Sciences Organization (BASO)</strong> in Ashland, Kentucky, co-authored a paper on coherent vortices in the mantle and their link to meteorological phenomena, and took AP and dual-enrollment courses at Morehead State University. The long-term goal is a <strong>Ph.D. in Atmospheric Sciences</strong> focused on mesoscale dynamics and AI-constrained numerical weather prediction.</p>
+      <p class="muted">Everything on this site traces to a public repository, a documented run, or my own files. Where something is a plan, it says <span class="pill plan">plan</span>.</p>
     </div>
     <div class="reveal">
       <p class="eyebrow">Skills &amp; stack</p>
       <h2>Toolbox</h2>
       <h4>Numerical modeling</h4>
       <ul class="tags"><li class="tag hl">CM1 (Fortran, MPI)</li><li class="tag">namelist.input</li><li class="tag">NSSL 2-moment</li><li class="tag">WENO advection</li><li class="tag">input_sounding</li><li class="tag">ensembles (numrand)</li></ul>
+      <h4 style="margin-top:16px">Machine learning</h4>
+      <ul class="tags"><li class="tag hl">PyTorch (CUDA, AMP)</li><li class="tag">3-D U-Net</li><li class="tag">FNO / transformer</li><li class="tag">cm1lab</li><li class="tag">rollout curriculum</li></ul>
       <h4 style="margin-top:16px">Hydrology &amp; HPC</h4>
       <ul class="tags"><li class="tag hl">Local-inertial SWE (Bates 2010)</li><li class="tag">SCS curve number</li><li class="tag">CuPy / CUDA 12</li><li class="tag">Slurm array jobs</li><li class="tag">TACC Vista</li><li class="tag">Manning roughness</li></ul>
       <h4 style="margin-top:16px">Geospatial &amp; software</h4>
       <ul class="tags"><li class="tag">Python</li><li class="tag">rasterio / GDAL</li><li class="tag">Cloud-Optimized GeoTIFF</li><li class="tag">MapLibre GL JS</li><li class="tag">TypeScript / Vite</li><li class="tag">Rust wgpu (Vulkan)</li><li class="tag">GeoPandas</li></ul>
+      <h4 style="margin-top:16px">Weather software &amp; dashboards</h4>
+      <ul class="tags"><li class="tag hl">MetDash</li><li class="tag hl">MeteoLab</li><li class="tag">BG Weather Monitor</li><li class="tag">HTML / JS / tkinter</li><li class="tag">NWS &amp; Kentucky Mesonet data</li></ul>
       <h4 style="margin-top:16px">Data &amp; standards</h4>
-      <ul class="tags"><li class="tag">KyFromAbove LiDAR</li><li class="tag">USGS 3DEP</li><li class="tag">FEMA NFHL</li><li class="tag">NOAA Atlas 14</li><li class="tag">OpenStreetMap</li></ul>
+      <ul class="tags"><li class="tag">KyFromAbove LiDAR</li><li class="tag">USGS 3DEP</li><li class="tag">FEMA NFHL</li><li class="tag">KGS karst layers</li><li class="tag">FHWA NBI</li><li class="tag">NOAA Atlas 14</li><li class="tag">OpenStreetMap</li></ul>
     </div>
   </div>
 </section>
@@ -161,36 +193,119 @@
 <section id="work">
   <div class="wrap">
     <div class="sec-head reveal"><p class="eyebrow">Projects</p><h2>Featured work</h2>
-      <p class="muted">Four threads, one goal: turn atmospheric physics into decisions people can trust.</p></div>
-    <div class="grid g2">
-      <a class="card reveal" href="flood.html">
+      <p class="muted">One goal: turn atmospheric physics into decisions people can trust. Filter by theme; every card says whether it is built, active, or still a plan.</p></div>
+    <div class="filters reveal" role="group" aria-label="Filter featured work by category" data-filter-group="work-grid">
+      <button type="button" data-cat="all" aria-pressed="true">All</button>
+      <button type="button" data-cat="modeling" aria-pressed="false">Modeling &amp; HPC</button>
+      <button type="button" data-cat="software" aria-pressed="false">Software &amp; Dashboards</button>
+      <button type="button" data-cat="field" aria-pressed="false">Field &amp; EM</button>
+      <button type="button" data-cat="media" aria-pressed="false">Media &amp; Writing</button>
+    </div>
+    <p class="work-count" id="work-grid-count" aria-live="polite"></p>
+    <div class="work-grid" id="work-grid">
+
+      <a class="card work-card reveal" data-cat="modeling software" href="flood.html">
         <div class="thumb"><img src="assets/img/barren-river-low-sun.webp" width="1024" height="576" loading="lazy" decoding="async" alt="Low-sun 3-D render of the Barren River floodplain with simulated flood water"></div>
-        <div class="kicker">Flood hydrodynamics · <span class="pill live">active</span></div>
-        <h3>Warren County 3-D Flood Risk Map</h3>
-        <p class="muted">A GPU 2-D shallow-water solver (local-inertial, as in LISFLOOD-FP) on TACC Vista: 80 M cells at 2 m for Bowling Green and 125 M cells at 5 m for the whole county, 12 storms, served through COG tiles to a web and a native desktop viewer.</p>
-        <ul class="tags"><li class="tag">CuPy</li><li class="tag">Slurm</li><li class="tag">COG</li><li class="tag">MapLibre</li><li class="tag">wgpu</li></ul>
+        <div class="body">
+          <div class="kicker">Flood hydrodynamics</div>
+          <h3>Warren County 3-D Flood Risk Map</h3>
+          <p class="muted">A GPU 2-D shallow-water solver (local-inertial, as in LISFLOOD-FP) on TACC Vista: 80 M cells at 2 m for Bowling Green and 125 M cells at 5 m for the whole county, 12 storms, served through COG tiles to a web and a native desktop viewer.</p>
+          <div class="status-row"><span class="pill live">active</span><span class="pill limit">not validated</span></div>
+          <ul class="tags"><li class="tag">CuPy</li><li class="tag">Slurm</li><li class="tag">COG</li><li class="tag">MapLibre</li><li class="tag">wgpu</li></ul>
+        </div>
       </a>
-      <a class="card reveal" href="nwp-lab.html">
-        <div class="thumb"><img src="assets/img/zdr-column-schematic.svg" width="1000" height="560" loading="lazy" decoding="async" alt="Conceptual schematic of a ZDR column above the freezing level"></div>
-        <div class="kicker">Numerical weather prediction · <span class="pill plan">research plan</span></div>
-        <h3>NWP Lab: CM1 severe-storm program</h3>
-        <p class="muted">Idealized and real-event CM1 simulations of high-shear, low-CAPE (HSLC) storms and QLCS evolution, with ZDR-column diagnostics. Includes a namelist explorer and a grid / time-step planner.</p>
-        <ul class="tags"><li class="tag">CM1 r22</li><li class="tag">HSLC</li><li class="tag">QLCS</li><li class="tag">ZDR columns</li></ul>
+
+      <a class="card work-card reveal" data-cat="modeling" href="nwp-lab.html">
+        <div class="thumb" data-fallback data-missing=""><img src="assets/img/cm1-full-clouds.webp" width="1600" height="801" loading="lazy" decoding="async" alt="Volume rendering of a CM1 supercell: updraft column and anvil outflow"></div>
+        <div class="body">
+          <div class="kicker">Numerical weather prediction</div>
+          <h3>NWP Lab: CM1 supercell + neural emulator</h3>
+          <p class="muted">CM1 r21.1 supercell runs (80 × 80 × 150 cells, 171 outputs) and <code>cm1lab</code>, a PyTorch toolkit that trains 3-D U-Nets to step CM1 forward. Best model beats "nothing changes" by 22 % at +100 s on held-out times of one storm. Not a general emulator yet; HSLC and ZDR-column ensembles are the plan.</p>
+          <div class="status-row"><span class="pill done">built</span><span class="pill plan">research plan</span></div>
+          <ul class="tags"><li class="tag">CM1 r21.1</li><li class="tag">PyTorch</li><li class="tag">3-D U-Net</li><li class="tag">HSLC</li><li class="tag">ZDR columns</li></ul>
+        </div>
       </a>
-      <a class="card reveal" href="emergency-management.html">
+
+      <article class="card work-card hoverable reveal" data-cat="software">
+        <div class="thumb contain" data-fallback data-missing=""><img src="assets/img/metdash-ui.webp" width="1600" height="584" loading="lazy" decoding="async" alt="MetDash NWS Commute Forecast: a card for Thursday 3/5 showing 8 AM and 4 PM temperature, rain chance, wind, gust and a weather-impact-likely flag"></div>
+        <div class="body">
+          <div class="kicker">Software &amp; dashboards</div>
+          <h3>MetDash &amp; MeteoLab</h3>
+          <p class="muted"><strong>MetDash</strong> is an NWS commute-forecast dashboard: temperature, rain chance, wind, gust and QPF for 8 AM and 4 PM windows, with a "weather impact likely" flag. <strong>MeteoLab</strong> is BASO's single-page radar and mesoscale tools portal. I built both before and alongside my WKU research.</p>
+          <div class="status-row"><span class="pill done">built</span><span class="pill plan">prototype</span></div>
+          <details class="drawer">
+            <summary class="more">Tooling detail: MeteoLab</summary>
+            <figure class="fig" data-fallback data-missing="" style="margin-top:12px">
+              <button class="lb" type="button" aria-label="Enlarge: MeteoLab interface"><img src="assets/img/meteolab-trends.webp" width="1600" height="1000" loading="lazy" decoding="async" alt="MeteoLab interface: radar loop panel, mesoscale analysis tools, spotter reference and observation report form"></button>
+              <figcaption>MeteoLab (BASO): a static single-page portal with a KRLX radar loop, links to SPC mesoanalysis and training resources, a spotter hail-size reference and a storm-report form. Shown without its front-end sign-in screen; the radar is live NWS imagery from the day of capture (22 Nov 2026).</figcaption>
+            </figure>
+          </details>
+          <ul class="tags"><li class="tag">HTML / JS</li><li class="tag">NWS data</li><li class="tag">radar</li><li class="tag">QPF</li></ul>
+        </div>
+      </article>
+
+      <a class="card work-card reveal" data-cat="modeling software" href="flood.html#karst">
+        <div class="thumb" data-fallback data-missing=""><img src="assets/img/karst-xray-preview.webp" width="1600" height="900" loading="lazy" decoding="async" alt="Map of LiDAR-derived karst sinkholes in the Bowling Green domain, colored by maximum depth, labeled as an architectural preview"></div>
+        <div class="body">
+          <div class="kicker">Flood model · roadmap</div>
+          <h3>Subsurface karst &amp; infrastructure integration</h3>
+          <p class="muted">Architecture for bringing KyFromAbove LiDAR DEMs, 68,389 building footprints, 106 FHWA NBI bridges and Kentucky Geological Survey karst layers into one WebGL / PMTiles / COG pipeline on UTM 16N. A sinkhole layer screened against KGS data exists; the drainage physics does not.</p>
+          <div class="status-row"><span class="pill plan">research plan</span><span class="pill limit">not operational</span></div>
+          <ul class="tags"><li class="tag">KGS karst</li><li class="tag">FHWA NBI</li><li class="tag">PMTiles</li><li class="tag">EPSG:26916</li></ul>
+        </div>
+      </a>
+
+      <a class="card work-card reveal" data-cat="field" href="emergency-management.html">
         <div class="thumb"><img src="assets/img/downtown-exposure.webp" width="1440" height="810" loading="lazy" decoding="async" alt="3-D view of downtown buildings tinted by simulated flood-depth tier"></div>
-        <div class="kicker">Decision support · <span class="pill limit">not operational</span></div>
-        <h3>Training both tracks for emergency management</h3>
-        <p class="muted">An eight-rung readiness ladder (L1–L8) from "numerically sound" to "co-designed with a county EM office," the evidence at each rung, the open gaps, and how NWP rainfall will eventually drive the flood model.</p>
-        <ul class="tags"><li class="tag">validation</li><li class="tag">calibration</li><li class="tag">coupling</li><li class="tag">guardrails</li></ul>
+        <div class="body">
+          <div class="kicker">Decision support</div>
+          <h3>Training both tracks for emergency management</h3>
+          <p class="muted">An eight-rung readiness ladder (L1–L8) from "numerically sound" to "co-designed with a county EM office," the evidence at each rung, the open gaps, and how NWP rainfall will eventually drive the flood model.</p>
+          <div class="status-row"><span class="pill limit">not operational</span></div>
+          <ul class="tags"><li class="tag">validation</li><li class="tag">calibration</li><li class="tag">coupling</li><li class="tag">guardrails</li></ul>
+        </div>
       </a>
-      <a class="card reveal" href="knowledge-base.html">
-        <div class="thumb"><img src="assets/img/knowledge-graph.svg" width="1000" height="1000" loading="lazy" decoding="async" alt="Link graph of the 324-note meteorology vault"></div>
-        <div class="kicker">Foundations · <span class="pill done">built</span></div>
-        <h3>Meteorology knowledge base</h3>
-        <p class="muted">A 10-chapter Obsidian vault of 324 single-concept notes and 2,654 wikilinks, with a corrections log, a convective-parameter reference and a full CM1 <code>namelist.input</code> reference.</p>
-        <ul class="tags"><li class="tag">Obsidian</li><li class="tag">CAPE / CIN / STP</li><li class="tag">lapse rates</li></ul>
+
+      <a class="card work-card reveal" data-cat="field" href="emergency-management.html#field">
+        <div class="body">
+          <div class="kicker">Field operations</div>
+          <h3>Spotter, outreach &amp; search-and-rescue training</h3>
+          <p class="muted">NWS SKYWARN storm-spotter work, Weather-Ready Nation Ambassador outreach, search-and-rescue certification training (NASAR SARTECH and FEMA ICS courses) and field severe-weather tracking: the human side of the same hazard chain.</p>
+          <div class="status-row"><span class="pill live">active</span></div>
+          <ul class="tags"><li class="tag">SKYWARN</li><li class="tag">WRN Ambassador</li><li class="tag">SARTECH</li><li class="tag">FEMA ICS</li></ul>
+        </div>
       </a>
+
+      <article class="card work-card hoverable reveal" data-cat="software field">
+        <div class="body">
+          <div class="kicker">Software · operations</div>
+          <h3>BG Weather Monitor</h3>
+          <p class="muted">A Python / tkinter desktop monitor for Bowling Green: Kentucky Mesonet conditions (stations FARM and EWPK) plus every active NWS alert for Warren and six neighboring counties. A red banner and sound mark new warnings, and it drafts a warning graphic for me to review; nothing posts automatically.</p>
+          <div class="status-row"><span class="pill done">built</span><span class="pill live">in daily use</span></div>
+          <ul class="tags"><li class="tag">Python 3.11</li><li class="tag">tkinter</li><li class="tag">KY Mesonet</li><li class="tag">NWS alerts</li></ul>
+        </div>
+      </article>
+
+      <a class="card work-card reveal" data-cat="media" href="#offgrid">
+        <div class="body">
+          <div class="kicker">Writing</div>
+          <h3>Manuscript &amp; co-authored paper</h3>
+          <p class="muted">Author of the manuscript <em>The Pencil in the Case</em>; co-author of "Coherent Vortices in the Mantle and its Correlation to Meteorological Phenomena," from my pre-WKU research.</p>
+          <div class="status-row"><span class="badge">writing</span></div>
+          <ul class="tags"><li class="tag">fiction</li><li class="tag">earth-science paper</li></ul>
+        </div>
+      </a>
+
+      <a class="card work-card reveal" data-cat="media" href="#offgrid">
+        <div class="body">
+          <div class="kicker">Photography &amp; radio</div>
+          <h3>Off the grid</h3>
+          <p class="muted">Landscape, severe-sky and infrastructure photography on a Canon EOS R7, and a student-radio show on WKU Revolution 91.7 with live weather updates.</p>
+          <div class="status-row"><span class="badge">media</span></div>
+          <ul class="tags"><li class="tag">Canon EOS R7</li><li class="tag">WKU Revolution 91.7</li></ul>
+        </div>
+      </a>
+
     </div>
   </div>
 </section>
@@ -201,14 +316,14 @@
     <div class="sec-head reveal">
       <p class="eyebrow">Emergency management</p>
       <h2>How I'm training the NWP Lab and the Warren County flood model for emergency management</h2>
-      <p class="muted">Short version below; the full readiness ladder, guardrails and data wish-list are on <a href="emergency-management.html">their own page</a>.</p>
+      <p class="muted">Short version below; the full readiness ladder, guardrails, field credentials and data wish-list are on <a href="emergency-management.html">their own page</a>.</p>
     </div>
     <div class="callout reveal"><strong>Honest status.</strong> The flood depths are research-model output and are <strong>not validated</strong>. They should not be used for safety, insurance, engineering or emergency decisions. The point of this work is to build the path that could make them usable, and to be explicit about where I am on it.</div>
-    <div class="grid g3">
+    <div class="grid g2">
       <div class="card reveal">
         <div class="kicker">Track 1 · NWP Lab</div>
-        <h3>Learn the physics, then the model</h3>
-        <p class="muted">A 10-chapter curriculum mapped onto CM1 settings (stability → soundings, shear → hodographs, microphysics → <code>ptype</code>), then controlled experiments on the HSLC regime that dominates Southeast U.S. severe weather.</p>
+        <h3>Run the storm, train the emulator, then test it honestly</h3>
+        <p class="muted">A CM1 supercell run supplies 171 outputs; <code>cm1lab</code> trains U-Nets to step it forward and scores them against "nothing changes." The first result is real but small, and it overfits one storm. The next step is an ensemble across soundings so the score means something beyond that storm, then the HSLC regime that dominates Southeast U.S. severe weather.</p>
       </div>
       <div class="card reveal">
         <div class="kicker">Track 2 · Flood model</div>
@@ -220,6 +335,11 @@
         <h3>NWP rainfall → flood depth</h3>
         <p class="muted">Today rain is uniform and comes from one gauge. The plan is spatially varying rainfall from radar and model output, run as ensembles, so depth comes with probabilities instead of a single number.</p>
       </div>
+      <div class="card reveal">
+        <div class="kicker">Track 3 · Field</div>
+        <h3>The people side of the chain</h3>
+        <p class="muted">SKYWARN spotting, Weather-Ready Nation outreach, and search-and-rescue and incident-command training keep the models tied to how warnings are actually seen, relayed and acted on.</p>
+      </div>
     </div>
     <div class="reveal" style="margin-top:22px"><a class="btn primary" href="emergency-management.html">See the readiness ladder →</a></div>
   </div>
@@ -227,18 +347,29 @@
 
 <!-- ================= TIMELINE ================= -->
 <section id="timeline">
-  <div class="wrap grid g2" style="gap:40px">
+  <div class="wrap grid g2" style="gap:44px">
     <div class="reveal">
       <p class="eyebrow">Timeline</p>
       <h2>Recent work, dated</h2>
-      <p class="muted">Dates come from file timestamps, run summaries and commit history.</p>
+      <p class="muted">Dates come from file timestamps, run summaries and commit history. Earlier milestones are listed without dates.</p>
       <ol class="timeline">
-        <li><time>Late Aug 2026</time><strong>Meteorology vault begins.</strong> Course notes become a linked, single-concept knowledge base.</li>
+        <li class="early"><time>Early Mar 2026</time><strong>MetDash and MeteoLab.</strong> An NWS commute-forecast dashboard and the BASO radar and mesoscale portal.</li>
+        <li><time>Aug 27, 2026</time><strong>CM1 r21.1 compiled</strong> (gfortran, Open MPI, netCDF in WSL2 Ubuntu) and first test runs.</li>
+        <li><time>Sep 7–8, 2026</time><strong>First supercell run</strong> (113 outputs, 5 GB) volume-rendered in VisIt.</li>
         <li><time>Oct 4, 2026</time><strong>bg-flood-map repository created.</strong></li>
+        <li><time>Oct 13–14, 2026</time><strong>Main CM1 run</strong> (80 × 80 × 150, 171 outputs, 283 simulated minutes) finishes cleanly; <code>cm1lab</code> and the first U-Net emulators are built and scored.</li>
+        <li><time>Oct 15, 2026</time><strong>Second-run emulators trained.</strong> The larger, regularized model beats the smaller one on validation and test, reversing the first run.</li>
         <li><time>Oct 28, 2026</time><strong>NOAA Atlas 14 depths pulled</strong> for downtown Bowling Green; all six design storms land within 3 %.</li>
         <li><time>Nov 2–3, 2026</time><strong>County 2-year storm on Vista:</strong> 125 M cells, 7 h 03 min wall time, mass-balance error 2.2 × 10⁻⁹ %.</li>
         <li><time>Nov 4–5, 2026</time><strong>COG tiles built and audited</strong> (324 of 324 files byte-identical to the Vista set); first validation against April 2025 flooding.</li>
-        <li><time>Nov 16, 2026</time><strong>Latest push</strong> to the flood-map repository.</li>
+        <li><time>Nov 17–20, 2026</time><strong>Karst layers screened against KGS data</strong> for the city and county domains (5,191 and 24,948 depressions).</li>
+      </ol>
+      <h4 class="era" style="margin-top:18px">Earlier foundations (undated)</h4>
+      <ol class="timeline">
+        <li class="early"><strong>Founded and served as president of BASO</strong>, the Blazer Atmospheric Sciences Organization, in Ashland, Kentucky.</li>
+        <li class="early"><strong>Co-authored</strong> "Coherent Vortices in the Mantle and its Correlation to Meteorological Phenomena."</li>
+        <li class="early"><strong>AP and dual-enrollment coursework</strong> at Morehead State University.</li>
+        <li class="early"><strong>Enrolled in WKU's EEAS department</strong>, with a long-term goal of a Ph.D. in Atmospheric Sciences focused on mesoscale dynamics and AI-constrained numerical weather prediction.</li>
       </ol>
     </div>
     <div class="reveal">
@@ -247,7 +378,50 @@
       <div class="grid" style="gap:12px">
         <div class="card"><h3>Say what the model can't do</h3><p class="muted">No storm drains, no karst drainage, no upstream Barren River inflow, uniform rain, uncalibrated infiltration. Every viewer panel states its source and its limits.</p></div>
         <div class="card"><h3>Check the numbers that can be checked</h3><p class="muted">Mass balance, unit guards that abort on absurd rain rates, byte-level tile hashes, point-by-point raster comparisons. Then separately admit what can't be checked yet.</p></div>
-        <div class="card"><h3>Weak evidence is reported as weak</h3><p class="muted">The first validation replayed roughly half the real rainfall and scored road closures, not depths. The write-up says exactly that.</p></div>
+        <div class="card"><h3>Weak evidence is reported as weak</h3><p class="muted">The first flood validation replayed roughly half the real rainfall and scored road closures, not depths. The first emulator beats persistence on one storm and nothing more. The write-ups say exactly that.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= OFF THE GRID ================= -->
+<section id="offgrid">
+  <div class="wrap">
+    <div class="sec-head reveal"><p class="eyebrow">Off the grid</p><h2>Photography, campus radio &amp; writing</h2>
+      <p class="muted">A short, separate corner. None of it feeds the research; all of it keeps me looking at the sky and at people.</p></div>
+    <div class="bento">
+      <figure class="photo reveal" data-fallback>
+        <div class="frame" data-missing="">
+          <button class="lb" type="button" aria-label="Enlarge: bridge at sunset"><img src="assets/img/photo-bridge-sunset.webp" width="1200" height="900" loading="lazy" decoding="async" alt="A steel bridge silhouetted against a sunset sky over a river"></button>
+        </div>
+        <figcaption><b>Bridge study, sunset</b> · Ashland, KY · Canon EOS R7. Infrastructure and river light.</figcaption>
+      </figure>
+      <figure class="photo reveal" data-fallback>
+        <div class="frame" data-missing="">
+          <button class="lb" type="button" aria-label="Enlarge: convective sky structure"><img src="assets/img/photo-storm-sky.webp" width="1200" height="900" loading="lazy" decoding="async" alt="Towering convective clouds with a dark base and visible updraft structure"></button>
+        </div>
+        <figcaption><b>Convective sky structure</b> · Kentucky · Canon EOS R7. Updraft towers and a precipitation-free base.</figcaption>
+      </figure>
+      <figure class="photo reveal" data-fallback>
+        <div class="frame" data-missing="">
+          <button class="lb" type="button" aria-label="Enlarge: campus at golden hour"><img src="assets/img/photo-campus-golden-hour.webp" width="1200" height="900" loading="lazy" decoding="async" alt="A university campus landscape in warm golden-hour light"></button>
+        </div>
+        <figcaption><b>Golden hour</b> · WKU campus, Bowling Green · Canon EOS R7.</figcaption>
+      </figure>
+      <div class="card reveal">
+        <div class="kicker">Photography</div>
+        <h3>Canon EOS R7</h3>
+        <p class="muted">Landscape, sunset, severe-sky and infrastructure photography, including the Simeon Willis Memorial Bridge in Ashland and scenes around the Bowling Green and WKU campus.</p>
+      </div>
+      <div class="card reveal">
+        <div class="kicker">Campus radio</div>
+        <h3>"DJ Titanium" · WKU Revolution 91.7</h3>
+        <p class="muted">Student radio host: music transitions, live weather updates and sports commentary.</p>
+      </div>
+      <div class="card reveal">
+        <div class="kicker">Writing &amp; community</div>
+        <h3>The Pencil in the Case</h3>
+        <p class="muted">Author of the manuscript <em>The Pencil in the Case</em>, and an active American Red Cross blood donor.</p>
       </div>
     </div>
   </div>
@@ -263,7 +437,11 @@
       <a class="btn" href="https://github.com/RobertLesoski/bg-flood-map" rel="noopener">bg-flood-map repo</a>
       <a class="btn" href="https://www.linkedin.com/in/robert-lesoski-8817a6209/" rel="noopener">LinkedIn</a>
     </div>
-    <p class="muted" style="margin-top:18px">Based in Bowling Green, Kentucky. Interested in research collaboration, severe-weather modeling, and talking with emergency managers about what flood products would actually help.</p>
+    <dl class="spec" style="margin-top:22px">
+      <dt>academic</dt><dd><a class="mono" href="mailto:robert.lesoski138@topper.wku.edu">robert.lesoski138@topper.wku.edu</a></dd>
+      <dt>direct</dt><dd><a class="mono" href="mailto:robertlesoski11@gmail.com">robertlesoski11@gmail.com</a></dd>
+    </dl>
+    <p class="muted" style="margin-top:6px">Based in Bowling Green, Kentucky. Interested in research collaboration, severe-weather modeling, and talking with emergency managers about what flood products would actually help.</p>
   </div>
 </section>
 
