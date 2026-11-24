@@ -4,18 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Warren County Flood Model — GPU Hydrodynamics | Robert G. Lesoski</title>
-<meta name="description" content="Technical deep-dive: a GPU local-inertial shallow-water flood model of Warren County, KY (125 M cells at 5 m) on TACC Vista, with COG tiles, verification and an honest validation status.">
+<meta name="description" content="A GPU local-inertial flood model of Warren County, KY: summary, footage, current screenshots and observed context, with limits stated.">
 <link rel="canonical" href="https://robertlesoski.github.io/flood.html">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#0b1120">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Warren County Flood Model — GPU Hydrodynamics | Robert G. Lesoski">
+<meta property="og:description" content="A GPU local-inertial flood model of Warren County, KY: summary, footage, current screenshots and observed context, with limits stated.">
+<meta property="og:url" content="https://robertlesoski.github.io/flood.html">
 <meta property="og:image" content="https://robertlesoski.github.io/assets/img/og-card.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/site.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -27,403 +29,142 @@
       <a href="flood.html" aria-current="page">Flood model</a>
       <a href="nwp-lab.html">NWP lab</a>
       <a href="emergency-management.html">Field &amp; EM</a>
-      <a href="index.html#timeline">Timeline</a>
+      <a href="index.html#partners">Partners</a>
       <a href="index.html#contact">Contact</a>
     </nav>
     <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme" aria-pressed="false">☾</button>
     <button id="menu-btn" class="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">☰</button>
   </div>
 </header>
-
 <div class="page-hero">
   <div class="wrap">
-    <div class="crumb">home / flood model</div>
+    <div class="crumb"><a href="index.html">home</a> / flood model</div>
     <p class="eyebrow">Flood hydrodynamics · TACC Vista · DSOC / AIR Lab</p>
-    <h1 style="font-size:clamp(30px,4.4vw,46px)">Warren County, KY: a GPU flood model, end to end</h1>
-    <p class="lede" style="margin-bottom:0">From 1 m LiDAR and NOAA rainfall statistics to a 125-million-cell shallow-water simulation, verified tiles and a 3-D viewer, with the limits written next to the results.</p>
+    <h1 style="font-size:clamp(30px,4.4vw,46px)">Warren County, KY: a GPU flood model</h1>
+    <p class="lede" style="margin-bottom:0">Where water collects, shown in 3-D, with the limits written next to it.</p>
   </div>
 </div>
-
-<main id="main" class="wrap" style="padding-top:36px">
-<div class="with-toc">
-<aside class="toc" aria-label="On this page">
-  <a href="#overview">Overview</a>
-  <a href="#pipeline">Pipeline</a>
-  <a href="#data">Data sources</a>
-  <a href="#solver">Solver &amp; physics</a>
-  <a href="#rain">Rainfall design</a>
-  <a href="#infil">Infiltration (SCS)</a>
-  <a href="#compute">Compute &amp; grids</a>
-  <a href="#outputs">Outputs &amp; tiles</a>
-  <a href="#verify">Verification</a>
-  <a href="#validate">Validation</a>
-  <a href="#viewers">Viewers</a>
-  <a href="#gallery">Gallery</a>
-  <a href="#karst">Karst &amp; infrastructure</a>
-  <a href="#limits">Limits</a>
-  <a href="#repro">Reproduce</a>
-</aside>
-
-<div>
-
-<section id="overview" style="padding-top:0">
-  <div class="callout"><strong>Disclaimer.</strong> Depths, extents and risk tiers are output from a research model. They have not been validated against observed flooding, and must not be used for safety, insurance, property, engineering or emergency decisions. For official flood risk, use FEMA flood maps and local authorities.</div>
-  <div class="grid g4">
-    <div class="card stat"><div class="num">2 m</div><div class="lbl">city grid, ~80 M cells, 20×20 km</div></div>
-    <div class="card stat"><div class="num">5 m</div><div class="lbl">county grid, 125,295,372 cells, ~52×60 km</div></div>
-    <div class="card stat"><div class="num">12</div><div class="lbl">storms × 25 hourly depth rasters + max</div></div>
-    <div class="card stat"><div class="num">3,872</div><div class="lbl">closed depressions (sinkholes) mapped from LiDAR</div></div>
-  </div>
-  <p style="margin-top:22px">The project is an interactive 3-D flood-risk visualization for Bowling Green and all of Warren County. It combines real LiDAR terrain, FEMA flood zones, NOAA Atlas 14 rainfall statistics, historical rain-gauge records and a custom GPU hydrodynamic solver, delivered as a MapLibre web viewer and a native Vulkan (wgpu) desktop viewer. Work done at WKU's Disaster Science Operations Center and AI Research Lab, under Dr. Manmeet Singh (PI), with contributor Somnath Luitel.</p>
-  <p class="muted">Source: <a href="https://github.com/RobertLesoski/bg-flood-map" rel="noopener">github.com/RobertLesoski/bg-flood-map</a></p>
-  <div class="reveal" style="margin-top:24px">
-    <div class="compare" role="group" aria-label="Before and after comparison of the Barren River at hour 12 and hour 24 of the 25-year storm">
-      <img src="assets/img/barren-river-25yr-h12.webp" width="1024" height="576" decoding="async" alt="Barren River floodplain at hour 12 of the 25-year storm">
-      <div class="after"><img src="assets/img/barren-river-25yr-h24.webp" width="1024" height="576" decoding="async" alt="Same view at hour 24: wider flooded area and more turbulent water"></div>
-      <input type="range" min="0" max="100" value="50" aria-label="Drag to compare hour 12 (left) and hour 24 (right)">
-      <div class="bar"></div>
-      <span class="tagl">HOUR 12</span><span class="tagr">HOUR 24</span>
+<main id="main">
+<section id="summary" style="padding-top:36px">
+  <div class="wrap">
+    <div class="sec-head reveal"><p class="eyebrow">Summary</p><h2>A county flood model, end to end</h2><p class="muted">From 1 m LiDAR and NOAA rainfall statistics to a 125-million-cell shallow-water simulation, served to two 3-D viewers.</p></div>
+    <div class="callout reveal"><strong>Not validated.</strong> Depths are research-model output. They are not for safety, insurance, engineering or emergency decisions. A first comparison with April 2025 road closures shows some skill in <em>where</em> water collects and none yet in <em>how deep</em>.</div>
+    <div class="grid g4" style="margin-bottom:26px">
+      <div class="card stat"><div class="num">125<small> M</small></div><div class="lbl">cells at 5 m, whole county</div></div>
+      <div class="card stat"><div class="num">12</div><div class="lbl">storm scenarios</div></div>
+      <div class="card stat"><div class="num">≤ 1<small> cm</small></div><div class="lbl">tile error vs solver rasters</div></div>
+      <div class="card stat"><div class="num">3,872</div><div class="lbl">LiDAR-mapped closed depressions</div></div>
     </div>
-    <p class="cap"><b>Same camera, 12 hours apart.</b> Barren River floodplain in the 25-year design storm: drag the handle to watch ponds merge and the channel widen. Simulated output from the desktop viewer; not validated. <span class="credit">Terrain: USGS 3DEP, KyFromAbove.</span></p>
+    <ol class="steps six reveal" aria-label="Pipeline">
+  <li class="step cool"><b>Terrain</b><span>1 m LiDAR to 5 m grid, UTM 16N</span></li>
+  <li class="step cool"><b>Rain</b><span>Atlas 14 design storms + 6 gauge replays</span></li>
+  <li class="step cool"><b>Solver</b><span>local-inertial shallow water on a GPU</span></li>
+  <li class="step cool"><b>Compute</b><span>TACC Vista, one H100 per storm</span></li>
+  <li class="step"><b>Tiles</b><span>Cloud-Optimized GeoTIFF, hash-checked</span></li>
+  <li class="step"><b>Viewers</b><span>web (MapLibre) and desktop (Vulkan)</span></li>
+</ol>
+    <div style="margin-top:26px"><div class="reveal" style="max-width:960px">
+  <div class="compare" role="group" aria-label="Before and after comparison of the Barren River at hour 12 and hour 24">
+    <img src="assets/img/barren-river-25yr-h12.webp" width="1024" height="576" loading="lazy" decoding="async" alt="Barren River floodplain at hour 12 of the 25-year storm">
+    <div class="after"><img src="assets/img/barren-river-25yr-h24.webp" width="1024" height="576" loading="lazy" decoding="async" alt="Same view at hour 24: wider flooded area"></div>
+    <input type="range" min="0" max="100" value="50" aria-label="Drag to compare HOUR 12 (left) and HOUR 24 (right)">
+    <div class="bar"></div><span class="tagl">HOUR 12</span><span class="tagr">HOUR 24</span>
+  </div>
+  <p class="cap"><b>Same camera, 12 hours apart.</b> Drag to watch ponds merge and the channel widen. Simulated; not validated.</p>
+</div></div>
   </div>
 </section>
 
-<section id="pipeline">
-  <div class="sec-head"><p class="eyebrow">Architecture</p><h2>Pipeline</h2></div>
-  <div class="diagram reveal">
-    <svg viewBox="0 0 900 330" role="img" aria-label="Pipeline: terrain, roughness and rainfall feed a GPU solver on Vista, producing depth rasters that become COG tiles and flow grids, served to web and desktop viewers and analysis tools." xmlns="http://www.w3.org/2000/svg">
-      <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="arrowhead"/></marker></defs>
-      <!-- inputs -->
-      <rect class="box" x="10" y="14" width="210" height="62" rx="10"/><text x="22" y="40">Terrain</text><text class="sub" x="22" y="53">KyFromAbove 1 m → 2 m</text><text class="sub" x="22" y="66">3DEP ~10 m → 5 m</text>
-      <rect class="box" x="10" y="94" width="210" height="62" rx="10"/><text x="22" y="120">Surface properties</text><text class="sub" x="22" y="138">Manning n · SCS CN 75/98</text>
-      <rect class="box" x="10" y="174" width="210" height="62" rx="10"/><text x="22" y="200">Rainfall</text><text class="sub" x="22" y="218">NOAA Atlas 14 · KBWG gauge</text>
-      <rect class="box" x="10" y="254" width="210" height="62" rx="10"/><text x="22" y="280">Context layers</text><text class="sub" x="22" y="298">FEMA NFHL · OSM · sinkholes</text>
-      <!-- solver -->
-      <rect class="box hot" x="290" y="86" width="190" height="150" rx="12"/>
-      <text x="304" y="112" style="font-weight:700">GPU solver</text>
-      <text class="sub" x="304" y="132">flood_solver_v2.py · CuPy</text>
-      <text class="sub" x="304" y="150">local-inertial SWE</text>
-      <text class="sub" x="304" y="168">SCS infiltration</text>
-      <text class="sub" x="304" y="186">free edge outflow</text>
-      <text class="sub" x="304" y="204">mass-balance log</text>
-      <text class="sub" x="304" y="222">Slurm array · 1 × H100</text>
-      <!-- outputs -->
-      <rect class="box cool" x="550" y="14" width="170" height="62" rx="10"/><text x="562" y="40">Depth rasters</text><text class="sub" x="562" y="58">hourly 0–24 h + max</text>
-      <rect class="box cool" x="550" y="94" width="170" height="62" rx="10"/><text x="562" y="120">COG tiles</text><text class="sub" x="562" y="138">EPSG:3857 · uint16 cm</text>
-      <rect class="box cool" x="550" y="174" width="170" height="62" rx="10"/><text x="562" y="200">Flow grids</text><text class="sub" x="562" y="218">velocity from WSE slope</text>
-      <rect class="box cool" x="550" y="254" width="170" height="62" rx="10"/><text x="562" y="280">Storm metadata</text><text class="sub" x="562" y="298">source + limits</text>
-      <!-- consumers -->
-      <rect class="box" x="770" y="64" width="120" height="70" rx="10"/><text x="782" y="90">Web viewer</text><text class="sub" x="782" y="108">MapLibre GL</text>
-      <rect class="box" x="770" y="150" width="120" height="70" rx="10"/><text x="782" y="176">Desktop</text><text class="sub" x="782" y="194">Rust · wgpu</text>
-      <rect class="box" x="770" y="236" width="120" height="70" rx="10"/><text x="782" y="262">Analysis</text><text class="sub" x="782" y="280">risk tools</text>
-      <!-- arrows -->
-      <path class="arrow" d="M220 45 C255 45 255 130 288 130" marker-end="url(#ah)"/>
-      <path class="arrow" d="M220 125 L288 150" marker-end="url(#ah)"/>
-      <path class="arrow" d="M220 205 C255 205 255 175 288 175" marker-end="url(#ah)"/>
-      <path class="arrow" d="M480 130 C515 130 515 45 548 45" marker-end="url(#ah)"/>
-      <path class="arrow" d="M720 45 C745 45 745 100 768 100" marker-end="url(#ah)"/>
-      <path class="arrow" d="M720 125 C745 125 745 170 768 170" marker-end="url(#ah)"/>
-      <path class="arrow" d="M720 205 C745 205 745 200 768 195" marker-end="url(#ah)"/>
-      <path class="arrow" d="M720 285 C745 285 745 270 768 270" marker-end="url(#ah)"/>
-    </svg>
+<section id="video">
+  <div class="wrap">
+    <div class="sec-head reveal"><p class="eyebrow">In motion</p><h2>Footage</h2></div>
+    <figure class="fig vid reveal" style="max-width:1040px">
+  <video controls muted loop playsinline preload="none" width="1280" height="720" poster="assets/img/ev6-tour-poster.webp">
+    <source src="assets/video/ev6-tour.mp4" type="video/mp4">
+    Your browser can't play this video. <a href="assets/video/ev6-tour.mp4">Download the clip</a>.
+  </video>
+  <figcaption><b>Real footage, desktop viewer</b> (county domain, May 2010 replay, hour 24). Several-metre depths at channel crossings are exactly what validation has to test.</figcaption>
+</figure>
+    <div style="margin-top:22px;max-width:900px"><figure class="fig vid reveal">
+  <video controls muted loop playsinline preload="none" data-autoplay width="900" height="720" poster="assets/img/solver-poster.webp">
+    <source src="assets/video/solver.mp4" type="video/mp4">
+    Your browser can't play this video. <a href="assets/video/solver.mp4">Download the clip</a>.
+  </video>
+  <figcaption><b>The scheme, running</b> on <em>synthetic</em> terrain: rain fills hollows, then the channel. An illustration of the method only, not Warren County.</figcaption>
+</figure></div>
   </div>
-  <p class="note">Context layers (FEMA, OSM, sinkholes) feed the viewers directly rather than the solver. Depth rasters are re-gridded into COGs and flow grids on Vista so only tens of MB per storm have to be downloaded.</p>
 </section>
 
-<section id="data">
-  <div class="sec-head"><p class="eyebrow">Inputs</p><h2>Data sources</h2></div>
-  <div class="tbl-wrap"><table>
-    <thead><tr><th>Dataset</th><th>Source</th><th>Used as</th></tr></thead>
-    <tbody>
-      <tr><td>1 m LiDAR DEM (city)</td><td>USGS / KyFromAbove Phase 2</td><td>Resampled to 2 m; covers ~13 % of the county grid</td></tr>
-      <tr><td>County terrain (~10 m)</td><td>USGS 3DEP 1/3 arc-second</td><td>Bilinear to 5 m, city DEM mosaicked on top</td></tr>
-      <tr><td>Historical hourly rain</td><td>Bowling Green gauge record</td><td>Six historical replays</td></tr>
-      <tr><td>Rainfall depths</td><td>NOAA Atlas 14, Warren County</td><td>Six design storms (2–100 yr)</td></tr>
-      <tr><td>Flood zones</td><td>FEMA NFHL</td><td>Context overlay (AE/A vs X)</td></tr>
-      <tr><td>Buildings &amp; roads</td><td>OpenStreetMap / Geofabrik</td><td>3-D extrusion, exposure, routing, impervious mask</td></tr>
-      <tr><td>Sinkholes</td><td>Derived from DEM</td><td>3,872 closed depressions with depth / rim / volume</td></tr>
-      <tr><td>HPC</td><td>TACC Vista (NVIDIA H100)</td><td>Solver runs, COG generation, flow-grid conversion</td></tr>
-    </tbody></table></div>
+<section id="screens">
+  <div class="wrap">
+    <div class="sec-head reveal"><p class="eyebrow">Screens</p><h2>Current screenshots</h2><p class="muted">Rendered this week from the desktop viewer.</p></div>
+    <div class="gallery"><figure class="shot wide"><button class="lb" type="button" aria-label="Enlarge: Current render of Bowling Green and the Barren River, 100-ye"><img src="assets/img/current-city-100yr.webp" width="1600" height="900" loading="lazy" decoding="async" alt="Current render of Bowling Green and the Barren River, 100-year storm"></button><figcaption>Bowling Green, 100-year storm, hour 14.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Current close render of neighborhoods with tinted buildings"><img src="assets/img/current-city-25yr-close.webp" width="1600" height="900" loading="lazy" decoding="async" alt="Current close render of neighborhoods with tinted buildings"></button><figcaption>Neighborhoods, 25-year hour 12.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Current render of Warren County with event-4 water"><img src="assets/img/current-county-ev4.webp" width="1600" height="900" loading="lazy" decoding="async" alt="Current render of Warren County with event-4 water"></button><figcaption>Warren County, event 4, hour 24.</figcaption></figure></div>
+  </div>
 </section>
 
-<section id="solver">
-  <div class="sec-head"><p class="eyebrow">Numerics</p><h2>Solver &amp; physics</h2>
-    <p class="muted">A 2-D shallow-water solver using the <strong>local inertial approximation</strong> (Bates et al., 2010), the same scheme as LISFLOOD-FP: the convective-acceleration term is dropped, which makes it cheap and GPU-friendly while keeping inertia, so it is more faithful than a pure diffusive-wave model.</p></div>
-  <div class="eq reveal"><span class="cap">Momentum (face-centred discharge per unit width)</span>
-    $$q^{t+\Delta t}=\frac{q^{t}-g\,h_{f}\,\Delta t\,\dfrac{\partial (h+z)}{\partial x}}{1+\dfrac{g\,\Delta t\,n^{2}\,|q^{t}|}{h_{f}^{10/3}}}$$</div>
-  <div class="eq reveal"><span class="cap">Continuity (cell update, with rain/infiltration source)</span>
-    $$h_{i,j}^{t+\Delta t}=h_{i,j}^{t}+\Delta t\left[\frac{q_{x,i-\frac12}-q_{x,i+\frac12}+q_{y,j-\frac12}-q_{y,j+\frac12}}{\Delta x}+\dot r_{\mathrm{eff}}\right]$$</div>
-  <div class="eq reveal"><span class="cap">Stability (CFL-type time-step limit)</span>
-    $$\Delta t\le \alpha\,\frac{\Delta x}{\sqrt{g\,h_{\max}}},\qquad \alpha=0.3$$</div>
-  <ul class="tight">
-    <li><strong>Roughness:</strong> Manning n = 0.035 outside the city; a detailed city n raster (roads, buildings) on top.</li>
-    <li><strong>Boundary:</strong> free outflow at the domain edge (slope 0.005); no inflow.</li>
-    <li><strong>Safety guards:</strong> aborts if the rain file implies &gt; 600 mm/h (catches the classic mm/h vs m/s unit mistake) or if the grid is not UTM 16N at 5 m or exceeds 150 M cells; the county launcher also refuses to submit if the city DEM and 3DEP disagree by &gt; 3 m (datum / units).</li>
-    <li><strong>Mass balance:</strong> logged each run; the 2-year county run closes to 2.2 × 10⁻⁹ %. This checks the numerical scheme against the SCS runoff volume, <em>not</em> the physics.</li>
-  </ul>
-  <figure class="fig vid reveal" style="margin-top:22px;max-width:900px">
-      <video controls muted loop playsinline preload="none" data-autoplay width="900" height="720" poster="assets/img/solver-poster.webp">
-        <source src="assets/video/solver.mp4" type="video/mp4">
-        Your browser can't play this video. <a href="assets/video/solver.mp4">Download the clip</a>.
-      </video>
-      <figcaption><b>The scheme, running.</b> A numpy implementation of the same local-inertial update shown above (face discharge with Manning friction, cell continuity, rain source, CFL time step, free outflow at the right edge) on <em>synthetic</em> 9 &times; 6 km terrain: a meandering channel, side valleys and hillslope hollows, under a Gaussian storm peaking at 75 mm/h. Water collects in the hollows first, then the channel fills and the pulse travels downstream. <b>Illustration of the method only:</b> not Warren County, not calibrated, not a validated forecast.</figcaption>
-    </figure>
-</section>
-
-<section id="rain">
-  <div class="sec-head"><p class="eyebrow">Forcing</p><h2>Rainfall design</h2>
-    <p class="muted">Six design storms use 24-hour depths within 3 % of NOAA Atlas 14 (retrieved 2026-10-28 for downtown Bowling Green, partial-duration series). Six more replay hourly blocks from the Bowling Green gauge.</p></div>
-  <div class="grid g2">
-    <div class="tool reveal">
-      <h3>Depth used vs. NOAA Atlas 14</h3>
-      <svg id="chart-return" class="chart" role="img" aria-label="Bar chart comparing 24-hour rainfall depth used in the runs with NOAA Atlas 14 for six return periods"></svg>
-      <div class="legend"><span><i style="background:var(--accent)"></i>used in runs</span><span><i style="background:var(--accent-2)"></i>NOAA Atlas 14</span><span>labels: % difference</span></div>
+<section id="observed">
+  <div class="wrap">
+    <div class="sec-head reveal"><p class="eyebrow">Observed</p><h2>What actually happened</h2><p class="muted">National Weather Service products for the two historical events I replay.</p></div>
+    <div class="grid g2" style="gap:22px;align-items:start">
+      <figure class="fig reveal">
+  <button class="lb" type="button" aria-label="Enlarge: NWS hydrograph of the Barren River at Bowling Green in April"><img src="assets/img/nws-bwg-hydrograph-apr2025.webp" width="1600" height="800" loading="lazy" decoding="async" alt="NWS hydrograph of the Barren River at Bowling Green in April 2025, cresting at 35.76 feet"></button>
+  <figcaption><b>Event 4, as observed.</b> Barren River at Bowling Green: crest 35.76 ft against a 28 ft flood stage. <span class="credit">NWS / NOAA, <a href="https://water.noaa.gov/gauges/bwgk2" rel="noopener">live gauge</a>.</span></figcaption>
+</figure>
+      <figure class="fig reveal">
+  <button class="lb" type="button" aria-label="Enlarge: NWS map of observed precipitation ending 7 April 2025"><img src="assets/img/nws-rain-apr2025.webp" width="715" height="352" loading="lazy" decoding="async" alt="NWS map of observed precipitation ending 7 April 2025"></button>
+  <figcaption><b>The rain behind it.</b> Several inches to over 10 in. My replay used roughly half the real rain. <span class="credit">NWS / NOAA.</span></figcaption>
+</figure>
+      <figure class="fig reveal" style="max-width:520px">
+  <button class="lb" type="button" aria-label="Enlarge: NWS map of two-day rainfall totals for 1 to 2 May 2010"><img src="assets/img/nws-rain-may2010.webp" width="794" height="559" loading="lazy" decoding="async" alt="NWS map of two-day rainfall totals for 1 to 2 May 2010"></button>
+  <figcaption><b>Event 6.</b> NWS two-day rainfall, May 2010; the NWS summary reports just over 10 in in southern Warren County. <span class="credit"><a href="https://www.weather.gov/lmk/flood_050210_how_it_happened" rel="noopener">NWS Louisville</a>.</span></figcaption>
+</figure>
+      <figure class="fig reveal" style="max-width:520px">
+  <button class="lb" type="button" aria-label="Enlarge: Map comparing flagged roads with roads reported flooded in A"><img src="assets/img/ev4-validation-map.webp" width="1300" height="1170" loading="lazy" decoding="async" alt="Map comparing flagged roads with roads reported flooded in April 2025"></button>
+  <figcaption><b>First validation:</b> roads the model flags vs roads officials reported flooded or closed. Weak evidence, reported as weak.</figcaption>
+</figure>
     </div>
-    <div class="tool reveal">
-      <h3>Hyetograph (shared 11-point curve)</h3>
-      <label class="f" style="max-width:240px;margin-bottom:10px">Storm<select id="hy-storm"></select></label>
-      <svg id="chart-hyeto" class="chart" role="img" aria-label="Hyetograph: rainfall rate per 2.4-hour block with cumulative curve"></svg>
-      <div class="out" id="hy-out" style="margin-top:12px"></div>
-      <p class="note">The temporal curve is the one fitted to the first 2-year run and reused for all design storms. It is <strong>not</strong> the NRCS Type II distribution; at hour 10 the domain-mean depth is 30.3 mm in the run, 30.4 mm from this curve, vs. 16.1 mm from Type II.</p>
-    </div>
-  </div>
-</section>
-
-<section id="infil">
-  <div class="sec-head"><p class="eyebrow">Losses</p><h2>Infiltration: SCS curve number</h2>
-    <p class="muted">Runoff of the cumulative rain is injected as a per-cell source. CN = 75 for open land and 98 for roads and buildings. Water already on the surface never infiltrates later. Try it:</p></div>
-  <div class="tool reveal">
-    <div class="eq"><span class="cap">SCS-CN</span>$$S=\frac{1000}{CN}-10,\quad I_a=0.2\,S,\quad Q=\frac{(P-I_a)^2}{P-I_a+S}\ \ (P>I_a)$$</div>
-    <div class="row">
-      <label class="f">Rain P (in)<input id="scs-P" type="number" step="0.1" min="0" value="3.5"></label>
-      <label class="f">Curve number<input id="scs-CN" type="number" step="1" min="31" max="100" value="75"></label>
-    </div>
-    <div class="cta" style="margin-bottom:14px">
-      <button class="btn" type="button" data-scs-p="3.5">2-yr 3.5"</button><button class="btn" type="button" data-scs-p="4.9">10-yr 4.9"</button><button class="btn" type="button" data-scs-p="5.9">25-yr 5.9"</button><button class="btn" type="button" data-scs-p="7.6">100-yr 7.6"</button>
-    </div>
-    <div class="out" id="scs-out"></div>
-    <p class="note">Check: P = 3.5 in, CN = 75 gives ~33 mm of runoff, matching the 33.2 mm reported by the 2-year county run (of 88.9 mm rain).</p>
-  </div>
-</section>
-
-<section id="compute">
-  <div class="sec-head"><p class="eyebrow">HPC</p><h2>Compute &amp; grids</h2>
-    <p class="muted">The county run is 10,404 × 12,043 cells at 5 m. One storm fits on one H100; all 12 are launched as a Slurm array with a throttle. The 2-year storm took 7 h 03 min wall time (423 min).</p></div>
-  <div class="tool reveal">
-    <h3>Grid &amp; stability calculator</h3>
-    <div class="cta" style="margin-bottom:14px">
-      <button class="btn" type="button" data-grid="10404,12043,5">County, 5 m</button>
-      <button class="btn" type="button" data-grid="10000,10000,2">City, 2 m (bounding box)</button>
-    </div>
-    <div class="row">
-      <label class="f">nx<input id="gr-nx" type="number" value="10404"></label>
-      <label class="f">ny<input id="gr-ny" type="number" value="12043"></label>
-      <label class="f">Δx (m)<input id="gr-dx" type="number" value="5"></label>
-      <label class="f">max depth h (m)<input id="gr-h" type="number" step="0.1" value="1"></label>
-      <label class="f">CFL α<input id="gr-al" type="number" step="0.05" value="0.3"></label>
-    </div>
-    <div class="out" id="gr-out"></div>
-    <p class="note">Δt here is the theoretical local-inertial limit at the chosen depth, not the step the production run used. The city's "80 M cells" counts valid cells inside the 20×20 km box.</p>
-  </div>
-  <h3 style="margin-top:26px">Run controls</h3>
-  <pre class="code"><code># dry-run: checks everything, builds nothing, writes the job file
-bash run_county_all.sh --dry-run
-# submit all 12 (or a subset); at most 4 at once
-bash run_county_all.sh --only "25yr ev4" --throttle 4
-# cancel the array
-scancel -n warrenv2</code></pre>
-  <p class="muted">The launcher stops with a <code>FATAL</code> line and submits nothing if a rain file is missing or in the wrong units, the solver is an old version, DEM sources disagree, or the grid is wrong.</p>
-</section>
-
-<section id="outputs">
-  <div class="sec-head"><p class="eyebrow">Delivery</p><h2>Outputs &amp; tiles</h2></div>
-  <div class="grid g2">
-    <div class="card reveal"><div class="kicker">Cloud-Optimized GeoTIFF</div>
-      <ul class="tight"><li>EPSG:3857, <code>uint16</code> depth in centimetres, nodata 65535</li><li>512 px tiles, DEFLATE + predictor 2, overviews 2/4/8/16/32</li><li>26 files per storm (25 hourly + max); HTTP Range supported so geotiff.js reads them directly</li><li>~5 m on the ground (6.25 mercator m)</li></ul></div>
-    <div class="card reveal"><div class="kicker">Flow grids</div>
-      <ul class="tight"><li>2,631 × 3,052 cells of 25 m (about 20 m on the ground), hours 4–24</li><li>Depth block-averaged 4× from 5 m to 20 m</li><li>Velocity <strong>derived</strong> from water-surface slope with Manning, not solver output; the metadata says so</li><li>Built on Vista in row strips (~0.5 GB RAM per worker), validated before being moved into place</li></ul></div>
-  </div>
-</section>
-
-<section id="verify">
-  <div class="sec-head"><p class="eyebrow">Is the code right?</p><h2>Verification</h2>
-    <p class="muted">Verification asks whether the pipeline computes what it claims. It is separate from validation, which asks whether the model matches reality.</p></div>
-  <div class="grid g3">
-    <div class="card stat reveal"><div class="num">324/324</div><div class="lbl">local COG files byte-identical (sha256) to the Vista <code>county_cog_tol</code> set</div></div>
-    <div class="card stat reveal"><div class="num">≤ 1 cm</div><div class="lbl">max error vs. expected bilinear resample, 22,421 random points (99th pct 1 cm)</div></div>
-    <div class="card stat reveal"><div class="num">516 + 480</div><div class="lbl">points where the viewer reader and its own <code>depthAt</code> path equal rasterio</div></div>
-  </div>
-  <div class="callout info" style="margin-top:20px"><strong>Found by verification.</strong> The first COG set used GDAL's default warp tolerance (0.125 px) and drifted up to 15 cm from the exact bilinear value. Re-running with tolerance 0.01 px brought it to ≤ 1 cm, and that set is the one shipped. The remaining honest limitation is re-gridding itself: solver cells are 5.0 m in UTM 16N, tiles 4.99 m in Web Mercator, so each tile pixel is a bilinear mix of up to four solver cells (mean difference to the single nearest cell 1–8 cm by depth stratum).</div>
-</section>
-
-<section id="validate">
-  <div class="sec-head"><p class="eyebrow">Is the model right?</p><h2>Validation: first attempt</h2>
-    <p class="muted">Event <code>ev4</code> replays the April 2025 Bowling Green flood and is compared with roads that officials named as flooded or closed (21 roads) vs. 100 random control roads.</p></div>
-  <div class="grid g4">
-    <div class="card stat reveal"><div class="num">16/21</div><div class="lbl">observed-flooded roads reach 30 cm in the model (76 %, 95 % CI 55–89 %)</div></div>
-    <div class="card stat reveal"><div class="num">27/100</div><div class="lbl">random city roads reach 30 cm</div></div>
-    <div class="card stat reveal"><div class="num">≈ 0.84</div><div class="lbl">AUC separating observed vs. control roads</div></div>
-    <div class="card stat reveal"><div class="num">0.62 vs 0.08 m</div><div class="lbl">median road maximum depth, observed vs. control</div></div>
-  </div>
-  <figure class="fig reveal" style="margin-top:22px;max-width:760px">
-    <img src="assets/img/ev4-validation-map.webp" width="1300" height="1170" loading="lazy" decoding="async" alt="Map of Warren County showing modeled maximum depth in blue, observed flooded roads in red and NWS reports as orange dots">
-    <figcaption><b>The ev4 comparison map.</b> Model maximum depth ≥ 0.10 m (blue) against roads reported flooded (red, drawn whole by road name rather than the reported segment) and NWS reports (orange). Many red roads cross blue, but so does road length alone: this is why the result is labeled weak evidence.</figcaption>
-  </figure>
-  <div class="grid g2" style="gap:22px;margin-top:30px;align-items:start">
-    <figure class="fig reveal">
-      <button class="lb" type="button" aria-label="Enlarge: Barren River stage, April 2025"><img src="assets/img/nws-bwg-hydrograph-apr2025.webp" width="1600" height="800" loading="lazy" decoding="async" alt="NWS hydrograph of Barren River stage at Bowling Green in April 2025, cresting at 35.76 feet above the 28 foot flood stage"></button>
-      <figcaption><b>Event 4, as observed.</b> NWS stage hydrograph for the Barren River at Bowling Green (BWGK2), April 2025: a crest of 35.76 ft against a 28 ft flood stage, then a second, lower crest. This is the river's response, which my uniform-rain replay does not reproduce. <span class="credit">Source: NWS / NOAA, a US government work. <a href="https://water.noaa.gov/gauges/bwgk2" rel="noopener">Live gauge page</a>.</span></figcaption>
-    </figure>
-    <figure class="fig reveal">
-      <button class="lb" type="button" aria-label="Enlarge: observed precipitation, April 2025"><img src="assets/img/nws-rain-apr2025.webp" width="715" height="352" loading="lazy" decoding="async" alt="NWS map of observed precipitation ending 12 PM CDT on 7 April 2025, with totals from a few inches to over 10 inches across Kentucky and Tennessee"></button>
-      <figcaption><b>The rain behind it.</b> NWS observed precipitation ending 12 PM CDT on 7 April 2025, several inches to over 10 in across the region. My event-4 replay used roughly half of the real rainfall (single gauge), which is one reason its depths are not trustworthy. <span class="credit">Source: NWS / NOAA, a US government work.</span></figcaption>
-    </figure>
-  </div>
-  <h3 style="margin-top:24px">Why this is weak evidence, in my own write-up</h3>
-  <ul class="tight">
-    <li><strong>Half the rain:</strong> the replay uses 24 h of rain (4.97 in at the airport gauge); the real event ran April 2–6 with 10.5 in at the same gauge (13.1 in at WKU).</li>
-    <li><strong>No upstream inflow:</strong> much of the observed flooding was river or creek water, which the model cannot represent.</li>
-    <li><strong>Names, not depths:</strong> observations are road-closure reports matched by name; a whole named road is scored even if only part flooded, and roads not in the news are <em>unknown</em>, not dry. No true false-alarm rate can be computed.</li>
-    <li><strong>Road length confounds:</strong> road length alone separates the two groups about as well.</li>
-  </ul>
-  <p>Conclusion as written: <em>weak evidence the model finds where water collects, and no evidence about depth accuracy.</em></p>
-</section>
-
-<section id="viewers">
-  <div class="sec-head"><p class="eyebrow">Interfaces</p><h2>Viewers</h2></div>
-  <div class="grid g2">
-    <div class="card reveal"><div class="kicker">Web · MapLibre GL JS 4.7</div>
-      <ul class="tight"><li>Real solver-depth tiles with click-to-query</li><li>3-D extruded buildings and roads coloured by depth tier (10 / 30 / 60 / 120 cm)</li><li>Address search with per-storm risk card, source labels and uncertainty</li><li>FEMA zones, sinkholes, critical facilities and utilities</li></ul></div>
-    <div class="card reveal"><div class="kicker">Desktop · Vulkan / wgpu</div>
-      <ul class="tight"><li>~125 fps (city) and ~140 fps (county) at 1080p on a GTX 1650</li><li>Measure, elevation profile, depth-over-time, storm compare and difference, flood duration</li><li>Dry-route finder; building exposure filter with CSV / GeoJSON export</li><li>Time-lapse, guided tour, PNG / MP4 export; works offline</li></ul></div>
-  </div>
-  <div style="margin-top:22px;max-width:1040px">
-    <figure class="fig vid reveal">
-      <video controls muted loop playsinline preload="none" width="1280" height="720" poster="assets/img/ev6-tour-poster.webp">
-        <source src="assets/video/ev6-tour.mp4" type="video/mp4">
-        Your browser can't play this video. <a href="assets/video/ev6-tour.mp4">Download the clip</a>.
-      </video>
-      <figcaption><b>Real footage from my desktop viewer.</b> A 57-second cinematic export of the county domain for historical event 6 (the May 2010 replay), hour 24, recorded frame by frame from the native Vulkan viewer at 1080p (shown here at 720p, 30 fps). Purple and orange is simulated water depth, white streaks are flow particles, grey lines are roads. The caption cards read the model's depth on a road segment; several metres at river and creek crossings is exactly the sort of number I do not trust until it is validated, and the not-validated line stays on screen in every frame.</figcaption>
-    </figure>
-  </div>
-  <figure class="fig reveal" style="max-width:520px;margin-top:22px">
-    <button class="lb" type="button" aria-label="Enlarge: two-day rainfall, May 2010"><img src="assets/img/nws-rain-may2010.webp" width="794" height="559" loading="lazy" decoding="async" alt="NWS map of two-day rainfall totals for 1 to 2 May 2010 over Kentucky and neighboring states, with the heaviest totals in southern Kentucky"></button>
-    <figcaption><b>Event 6, as observed.</b> NWS two-day rainfall totals for 1–2 May 2010. The NWS Louisville summary reports just over 10 inches in southern Warren County and a Barren River crest of 43.69 ft on 3 May. My replay uses one airport gauge, which my own notes say undercounts this event. <span class="credit">Source: NWS Louisville, a US government work. <a href="https://www.weather.gov/lmk/flood_050210_how_it_happened" rel="noopener">Event summary</a>.</span></figcaption>
-  </figure>
-  <div class="gallery" style="margin-top:18px">
-    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: event 6 county overview"><img src="assets/img/ev6-county-overview.webp" width="1280" height="720" loading="lazy" decoding="async" alt="Oblique view over Bowling Green with purple and orange flood water in the river corridors and small ponds across the terrain"></button><figcaption>Event 6 (May 2010 replay), county domain, hour 24: Bowling Green and the river corridors. Frame from the recording above.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: event 6, road caption card"><img src="assets/img/ev6-old-stone-way.webp" width="1280" height="720" loading="lazy" decoding="async" alt="River meander with dense white flow particles and a road caption card at lower left"></button><figcaption>A road caption card on a river meander. The card reads simulated depth at the road segment; unvalidated.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: event 6, trunk road crossing"><img src="assets/img/ev6-scottsville-road.webp" width="1280" height="720" loading="lazy" decoding="async" alt="A trunk road crossing a flooded river bend, drawn in dark blue where water covers it"></button><figcaption>A trunk road crossing the floodplain: segments the model puts under water are drawn dark blue.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: event 6, primary road crossing a creek"><img src="assets/img/ev6-morgantown-road.webp" width="1280" height="720" loading="lazy" decoding="async" alt="A primary road crossing a creek with a pool of deep purple water upstream"></button><figcaption>A primary road crossing a creek, with deep ponding on the upstream side. Depths at crossings like this are the first thing validation has to test.</figcaption></figure>
-  </div>
-  <div class="reveal" style="margin-top:30px;max-width:960px">
-    <div class="compare" role="group" aria-label="Before and after comparison of water rendering: glare artifacts versus the fixed shader">
-      <img src="assets/img/water-glare-before.webp" width="960" height="540" loading="lazy" decoding="async" alt="Downtown and the river with bright white glare artifacts on the water surface">
-      <div class="after"><img src="assets/img/water-glare-after.webp" width="960" height="540" loading="lazy" decoding="async" alt="Same view after the fix: continuous blue water without white blotches"></div>
-      <input type="range" min="0" max="100" value="50" aria-label="Drag to compare before (left) and after (right) the water-shading fix">
-      <div class="bar"></div>
-      <span class="tagl">BEFORE</span><span class="tagr">AFTER</span>
-    </div>
-    <p class="cap"><b>Rendering is part of honesty, too.</b> Specular glare on the water used to look like dry white patches; the fix keeps depth readable at glancing angles. Same camera, 25-year storm, simulated output.</p>
   </div>
 </section>
 
 <section id="gallery">
-  <div class="sec-head"><p class="eyebrow">Media</p><h2>Gallery</h2>
-    <p class="muted">Renders and screenshots from the desktop viewer. Click any image to enlarge; use the arrow keys to move between them. All water, depths and building tiers are simulated, unvalidated model output.</p></div>
-  <div class="gallery">
-    <figure class="shot wide"><button class="lb" type="button" aria-label="Enlarge: building exposure downtown"><img src="assets/img/downtown-exposure.webp" width="1440" height="810" loading="lazy" decoding="async" alt="Downtown buildings tinted by flood-depth tier with water and flow arrows"></button><figcaption>Building exposure, downtown, 25-year storm hour 12: footprints tinted by simulated depth tier (blue shallow, teal moderate, orange deep) with flow arrows in the ponding.</figcaption></figure>
-    <figure class="shot wide"><button class="lb" type="button" aria-label="Enlarge: neighborhood exposure"><img src="assets/img/neighborhood-exposure.webp" width="1440" height="810" loading="lazy" decoding="async" alt="Residential neighborhood with ponded water, tinted buildings and roads"></button><figcaption>Residential neighborhood: local depressions fill, a few structures and road segments (orange) cross depth thresholds.</figcaption></figure>
-    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: low sun on the Barren River"><img src="assets/img/barren-river-low-sun.webp" width="1024" height="576" loading="lazy" decoding="async" alt="Low-sun view across the river floodplain with ponded water"></button><figcaption>Low sun, Barren River floodplain: ponding in LiDAR-resolved depressions, the 25-year storm at hour 12.</figcaption></figure>
-    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: flow particles and arrows on a flooded street area"><img src="assets/img/street-flow-particles.webp" width="1152" height="648" loading="lazy" decoding="async" alt="Flooded area with white flow particles and arrows"></button><figcaption>Flow particles and arrows. Velocity is derived from the water-surface slope with Manning, not solver output.</figcaption></figure>
-    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: flow paths and maximum depth"><img src="assets/img/flowpaths-max-depth.webp" width="896" height="504" loading="lazy" decoding="async" alt="Overview map with maximum depth tiers and flow paths in pink, orange and blue"></button><figcaption>Maximum depth by tier with flow paths, across the city and its creek corridors.</figcaption></figure>
-    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: channel overview"><img src="assets/img/channel-overview.webp" width="960" height="540" loading="lazy" decoding="async" alt="Creek channel crossing a road with ponding and buildings nearby"></button><figcaption>A channel crossing a transport corridor, with nearby buildings and ponded depressions.</figcaption></figure>
-    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: low-angle water view"><img src="assets/img/water-low-angle.webp" width="1280" height="720" loading="lazy" decoding="async" alt="Low-angle view over flood water with arrows and a far shoreline"></button><figcaption>Low-angle water rendering used for presentation views.</figcaption></figure>
-    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: LiDAR terrain downtown"><img src="assets/img/lidar-downtown.webp" width="1024" height="576" loading="lazy" decoding="async" alt="Hillshaded LiDAR terrain of the downtown street grid with small blue ponds"></button><figcaption>LiDAR-resolved terrain, downtown: the street grid and building-scale relief are visible in the DEM itself, with small ponds in the low spots.</figcaption></figure>
-    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Warren County overview"><img src="assets/img/warren-overview-25yr-h12.webp" width="1024" height="576" loading="lazy" decoding="async" alt="Warren County terrain with river meanders and small ponds"></button><figcaption>Whole-county view at 25-year hour 12.</figcaption></figure>
-    <figure class="shot wide"><button class="lb" type="button" aria-label="Enlarge: desktop viewer interface"><img src="assets/img/desktop-viewer-ui.webp" width="1280" height="720" loading="lazy" decoding="async" alt="Desktop viewer with statistics panel, legend, at-risk building list and a timeline chart"></button><figcaption>The desktop viewer: statistics by depth tier, legend, at-risk list with road-level locations, hour-by-hour timeline, and an always-on honesty line stating that velocity is derived. County domain, 100-year storm, hour 12 (the tile-vs-grid comparison is shown with its own caveats).</figcaption></figure>
-    <figure class="shot wide"><button class="lb" type="button" aria-label="Enlarge: basemap on and off"><img src="assets/img/basemap-on-off.webp" width="1280" height="720" loading="lazy" decoding="async" alt="Split view with the map background on (left) and off (right)"></button><figcaption>Basemap on vs. off: the same flood tiers over a road-map background and over plain terrain. The toggle exists so imagery never hides the depth colours.</figcaption></figure>
-    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: terrain with real OSM basemap"><img src="assets/img/basemap-terrain-osm.webp" width="1280" height="720" loading="lazy" decoding="async" alt="Oblique terrain of Bowling Green draped with a road basemap and orange building tiers"></button><figcaption>Terrain draped with a real road basemap (OpenStreetMap, zoom 12): useful for orientation, with building tiers on top.</figcaption></figure>
-    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: selected building at hour 24"><img src="assets/img/selected-building.webp" width="1440" height="810" loading="lazy" decoding="async" alt="A selected building outlined in yellow beside ponded water at hour 24"></button><figcaption>Selecting a building outlines it and opens its per-storm depth card. 25-year storm, hour 24.</figcaption></figure>
-    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: golden-hour sky"><img src="assets/img/golden-hour.webp" width="960" height="540" loading="lazy" decoding="async" alt="City view at golden hour with the sun near the horizon and distant ridges"></button><figcaption>Golden-hour lighting, for presentation views. Lighting is cosmetic and does not change any depth.</figcaption></figure>
-    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: building facade shading"><img src="assets/img/facade-windows.webp" width="960" height="540" loading="lazy" decoding="async" alt="Floodplain and river bend with shaded building facades"></button><figcaption>Facade shading added for depth cues at oblique camera angles; simulated flood tiers on the buildings.</figcaption></figure>
+  <div class="wrap">
+    <div class="sec-head reveal"><p class="eyebrow">Gallery</p><h2>Renders</h2><p class="muted">Click any image to enlarge. All water and depth tiers are simulated, unvalidated model output.</p></div>
+    <div class="gallery"><figure class="shot wide"><button class="lb" type="button" aria-label="Enlarge: Downtown buildings tinted by flood-depth tier"><img src="assets/img/downtown-exposure.webp" width="1440" height="810" loading="lazy" decoding="async" alt="Downtown buildings tinted by flood-depth tier"></button><figcaption>Downtown exposure, 25-year storm hour 12: footprints tinted by simulated depth tier.</figcaption></figure><figure class="shot wide"><button class="lb" type="button" aria-label="Enlarge: Residential neighborhood with ponded water and tinted buildi"><img src="assets/img/neighborhood-exposure.webp" width="1440" height="810" loading="lazy" decoding="async" alt="Residential neighborhood with ponded water and tinted buildings"></button><figcaption>Neighborhood ponding and a few structures crossing depth thresholds.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Low-sun view across the river floodplain"><img src="assets/img/barren-river-low-sun.webp" width="1024" height="576" loading="lazy" decoding="async" alt="Low-sun view across the river floodplain"></button><figcaption>Low sun, Barren River floodplain.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Flooded area with white flow particles and arrows"><img src="assets/img/street-flow-particles.webp" width="1152" height="648" loading="lazy" decoding="async" alt="Flooded area with white flow particles and arrows"></button><figcaption>Flow particles and arrows (velocity derived from water-surface slope).</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Overview map of maximum depth tiers and flow paths"><img src="assets/img/flowpaths-max-depth.webp" width="896" height="504" loading="lazy" decoding="async" alt="Overview map of maximum depth tiers and flow paths"></button><figcaption>Maximum depth by tier with flow paths.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Creek channel crossing a road"><img src="assets/img/channel-overview.webp" width="960" height="540" loading="lazy" decoding="async" alt="Creek channel crossing a road"></button><figcaption>A channel crossing a transport corridor.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Low-angle view over flood water"><img src="assets/img/water-low-angle.webp" width="1280" height="720" loading="lazy" decoding="async" alt="Low-angle view over flood water"></button><figcaption>Low-angle water rendering.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Hillshaded LiDAR terrain of the downtown street grid"><img src="assets/img/lidar-downtown.webp" width="1024" height="576" loading="lazy" decoding="async" alt="Hillshaded LiDAR terrain of the downtown street grid"></button><figcaption>LiDAR terrain, downtown.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Warren County terrain with river meanders"><img src="assets/img/warren-overview-25yr-h12.webp" width="1024" height="576" loading="lazy" decoding="async" alt="Warren County terrain with river meanders"></button><figcaption>Whole-county view, 25-year hour 12.</figcaption></figure><figure class="shot wide"><button class="lb" type="button" aria-label="Enlarge: Split view with map background on and off"><img src="assets/img/basemap-on-off.webp" width="1280" height="720" loading="lazy" decoding="async" alt="Split view with map background on and off"></button><figcaption>Basemap on vs off.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Terrain draped with a road basemap"><img src="assets/img/basemap-terrain-osm.webp" width="1280" height="720" loading="lazy" decoding="async" alt="Terrain draped with a road basemap"></button><figcaption>Terrain with a road basemap.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Selected building outlined beside ponded water"><img src="assets/img/selected-building.webp" width="1440" height="810" loading="lazy" decoding="async" alt="Selected building outlined beside ponded water"></button><figcaption>Selecting a building.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: River meander with flow particles and a road caption card"><img src="assets/img/ev6-old-stone-way.webp" width="1280" height="720" loading="lazy" decoding="async" alt="River meander with flow particles and a road caption card"></button><figcaption>Event 6 frame: a road caption card on a river meander.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Trunk road crossing a flooded river bend"><img src="assets/img/ev6-scottsville-road.webp" width="1280" height="720" loading="lazy" decoding="async" alt="Trunk road crossing a flooded river bend"></button><figcaption>Event 6 frame: a trunk road crossing the floodplain.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Primary road crossing a creek with deep ponding"><img src="assets/img/ev6-morgantown-road.webp" width="1280" height="720" loading="lazy" decoding="async" alt="Primary road crossing a creek with deep ponding"></button><figcaption>Event 6 frame: a primary road crossing a creek.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Bowling Green and the river corridors in event 6"><img src="assets/img/ev6-county-overview.webp" width="1280" height="720" loading="lazy" decoding="async" alt="Bowling Green and the river corridors in event 6"></button><figcaption>Event 6 frame: Bowling Green and the river corridors.</figcaption></figure></div>
+    <div style="margin-top:30px"><div class="reveal" style="max-width:960px">
+  <div class="compare" role="group" aria-label="Before and after the water-shading fix">
+    <img src="assets/img/water-glare-before.webp" width="960" height="540" loading="lazy" decoding="async" alt="Downtown and the river with white glare on the water">
+    <div class="after"><img src="assets/img/water-glare-after.webp" width="960" height="540" loading="lazy" decoding="async" alt="Same view after the fix"></div>
+    <input type="range" min="0" max="100" value="50" aria-label="Drag to compare BEFORE (left) and AFTER (right)">
+    <div class="bar"></div><span class="tagl">BEFORE</span><span class="tagr">AFTER</span>
   </div>
-  <h3 style="margin-top:34px">The river itself, in normal conditions <span class="pill plan">not my photos</span></h3>
-  <p class="muted" style="max-width:68ch">Two public-domain photographs of the Barren River at Bowling Green, for scale: this is the channel that the 100-year runs turn into the purple bands in the viewer.</p>
-  <div class="gallery" style="max-width:900px">
-    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Barren River railroad and road bridges"><img src="assets/img/barren-river-bridge.webp" width="1600" height="900" loading="lazy" decoding="async" alt="A red steel truss railroad bridge and a concrete road bridge crossing the Barren River in winter"></button><figcaption>The Barren River at Bowling Green at normal flow, with the old L&amp;N railroad truss beside a road bridge. Photo: Nyttend, public domain, via <a href="https://commons.wikimedia.org/wiki/File:Barren_River_L%26N_Bridge_with_road_bridge.jpg" rel="noopener">Wikimedia Commons</a>.</figcaption></figure>
-    <figure class="shot"><button class="lb" type="button" aria-label="Enlarge: College Street Bridge"><img src="assets/img/college-street-bridge.webp" width="1600" height="1200" loading="lazy" decoding="async" alt="Looking along the steel truss College Street Bridge over the Barren River in Bowling Green"></button><figcaption>The College Street Bridge, a steel truss over the Barren River in Bowling Green, at normal river level. Photo: Nyttend, public domain, via <a href="https://commons.wikimedia.org/wiki/File:College_Street_Bridge,_Bowling_Green.jpg" rel="noopener">Wikimedia Commons</a>.</figcaption></figure>
+  <p class="cap"><b>Rendering is part of honesty.</b> Glare used to look like dry patches; the fix keeps depth readable.</p>
+</div></div>
   </div>
-  <p class="credit" style="margin-top:14px">Terrain: USGS 3DEP and KyFromAbove. Contains data © OpenStreetMap contributors (ODbL) where roads and buildings appear. Images generated by my viewers; model output is unvalidated. Third-party images are credited, with links to the originals, in the <a href="index.html#credits">image credits</a>.</p>
 </section>
 
 <section id="karst">
-  <div class="sec-head"><p class="eyebrow">Roadmap</p><h2>Subsurface karst &amp; infrastructure integration <span class="pill plan">research plan</span></h2>
-    <p class="muted">Warren County drains through limestone: sinkholes, conduits and losing streams. The solver today treats the ground as a surface with a runoff loss. This is the architecture for bringing the missing layers into one pipeline, and an honest account of how much of it exists.</p></div>
-  <div class="callout"><strong>Not operational.</strong> Nothing below is in the viewer yet except the derived sinkhole layer. No drainage physics has been implemented, so flood depths still ignore karst, storm drains and bridge hydraulics.</div>
-  <ol class="steps six reveal" aria-label="Integration pipeline">
-    <li class="step cool"><b>DEM</b><span>KyFromAbove LiDAR, UTM 16N, NAVD88</span></li>
-    <li class="step cool"><b>Buildings</b><span>68,389 merged footprints</span></li>
-    <li class="step cool"><b>Bridges</b><span>106 FHWA NBI structures</span></li>
-    <li class="step cool"><b>Karst</b><span>KGS sinkhole and subsurface-drainage layers</span></li>
-    <li class="step hot"><b>Benchmark</b><span>USGS gauge 03314500 (Barren River) stage</span></li>
-    <li class="step"><b>Delivery</b><span>PMTiles + COG into the WebGL viewer</span></li>
-  </ol>
-  <div class="tbl-wrap"><table>
-    <thead><tr><th>Layer</th><th>Source</th><th>CRS / datum</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td>Terrain</td><td>KyFromAbove LiDAR DEM (county) and USGS 3DEP</td><td class="mono">EPSG:26916 · NAVD88</td><td><span class="pill done">built</span></td></tr>
-      <tr><td>Building footprints</td><td>merged county set, 68,389 polygons</td><td class="mono">EPSG:26916</td><td><span class="pill live">in the pipeline</span></td></tr>
-      <tr><td>Bridges</td><td>FHWA National Bridge Inventory, 106 in the domain</td><td class="mono">EPSG:26916</td><td><span class="pill plan">plan</span></td></tr>
-      <tr><td>Sinkholes (derived)</td><td>closed depressions from the LiDAR DEM, screened against KGS data</td><td class="mono">UTM 16N</td><td><span class="pill done">built</span> 5,191 city · 24,948 county</td></tr>
-      <tr><td>Subsurface drainage</td><td>KGS karst and conduit layers</td><td class="mono">EPSG:26916</td><td><span class="pill plan">plan</span></td></tr>
-      <tr><td>Calibration benchmark</td><td>USGS 03314500 Barren River at Bowling Green</td><td class="mono">NAVD88 stage</td><td><span class="pill plan">plan</span></td></tr>
-    </tbody></table></div>
-  <figure class="fig reveal" data-fallback data-missing="" style="margin-top:6px;max-width:980px">
-    <button class="lb" type="button" aria-label="Enlarge: sinkhole layer preview"><img src="assets/img/karst-xray-preview.webp" width="1600" height="900" loading="lazy" decoding="async" alt="Map of LiDAR-derived karst sinkholes in the Bowling Green domain, colored by maximum depth"></button>
-    <figcaption><b>Architectural preview.</b> The 5,191 depressions in the city domain after screening against KGS data, colored by maximum depth. They are LiDAR-derived and show where water can pond or vanish; they say nothing about conduits underneath. The county layer holds 24,948. The derived files are tagged UTM 16N on WGS 84 (EPSG:32616); the target pipeline uses NAD83 (EPSG:26916), so a datum check comes first.</figcaption>
-  </figure>
-  <ul class="tight" style="margin-top:18px">
-    <li><strong>Why it matters:</strong> a sinkhole can drain a street or flood a basement from below. A surface-only model gets both wrong in karst terrain.</li>
-    <li><strong>First deliverable:</strong> a single tiled layer stack with the same CRS and datum, with each layer's source and limits shown in the viewer's honesty line.</li>
-    <li><strong>First test:</strong> does adding sinkhole storage change simulated depths enough to matter against the April 2025 road closures? If not, say so.</li>
-  </ul>
+  <div class="wrap">
+    <div class="sec-head reveal"><p class="eyebrow">Roadmap</p><h2>Karst &amp; infrastructure integration <span class="pill plan">research plan</span></h2><p class="muted">Warren County drains through limestone. The solver does not yet model sinkholes, conduits or bridges; this is the plan.</p></div>
+    <div class="grid g2" style="gap:22px;align-items:start">
+      <figure class="fig reveal">
+  <button class="lb" type="button" aria-label="Enlarge: LiDAR-derived sinkholes in the Bowling Green domain colored "><img src="assets/img/karst-xray-preview.webp" width="1600" height="900" loading="lazy" decoding="async" alt="LiDAR-derived sinkholes in the Bowling Green domain colored by depth"></button>
+  <figcaption><b>Architectural preview.</b> 5,191 city sinkholes after screening against KGS data (24,948 in the county). LiDAR-derived: not a subsurface model.</figcaption>
+</figure>
+      <div class="card"><div class="kicker">Planned layers</div><ul class="tight" style="max-width:none"><li>KyFromAbove LiDAR terrain (UTM 16N, NAVD88)</li><li>68,389 merged building footprints</li><li>106 FHWA NBI bridges</li><li>KGS karst and drainage layers</li><li>USGS gauge 03314500 as a calibration benchmark</li><li>delivery as PMTiles + COG in the WebGL viewer</li></ul></div>
+    </div>
+    <div class="gallery" style="max-width:900px;margin-top:26px"><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Red steel truss railroad bridge and a road bridge over the B"><img src="assets/img/barren-river-bridge.webp" width="1600" height="900" loading="lazy" decoding="async" alt="Red steel truss railroad bridge and a road bridge over the Barren River"></button><figcaption>Barren River at normal flow. Photo: Nyttend, public domain, via <a href="https://commons.wikimedia.org/wiki/File:Barren_River_L%26N_Bridge_with_road_bridge.jpg" rel="noopener">Wikimedia Commons</a>.</figcaption></figure><figure class="shot"><button class="lb" type="button" aria-label="Enlarge: Looking along the College Street Bridge over the Barren Rive"><img src="assets/img/college-street-bridge.webp" width="1600" height="1200" loading="lazy" decoding="async" alt="Looking along the College Street Bridge over the Barren River"></button><figcaption>College Street Bridge, normal river level. Photo: Nyttend, public domain, via <a href="https://commons.wikimedia.org/wiki/File:College_Street_Bridge,_Bowling_Green.jpg" rel="noopener">Wikimedia Commons</a>.</figcaption></figure></div>
+  </div>
 </section>
 
-<section id="limits">
-  <div class="sec-head"><p class="eyebrow">Read before using</p><h2>What the model does <em>not</em> include</h2></div>
-  <div class="tbl-wrap"><table>
-    <thead><tr><th>Limit</th><th>Why it matters</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td>Upstream river inflow (Barren River from Allen &amp; Simpson counties)</td><td>Riverine flooding is absent; edges only let water out</td><td><span class="pill limit">open</span></td></tr>
-      <tr><td>Storm drains and karst drainage</td><td>Overstates ponding in places that drain underground, understates conveyance elsewhere</td><td><span class="pill limit">open</span></td></tr>
-      <tr><td>Uniform rain from one gauge / design curve</td><td>Real storms are spatially variable</td><td><span class="pill plan">plan: radar / NWP forcing</span></td></tr>
-      <tr><td>Uncalibrated CN = 75 and roughness</td><td>Depths are not constrained by observations</td><td><span class="pill plan">plan</span></td></tr>
-      <tr><td>~10 m terrain outside the city</td><td>Small channels and building-scale flow unresolved</td><td><span class="pill limit">data-limited</span></td></tr>
-      <tr><td>Rain-on-grid sheet flow (2–3 cm everywhere)</td><td>Only ≥ 10 cm is treated as flooding in tiers and building counts</td><td><span class="pill done">handled</span></td></tr>
-      <tr><td>Peaks between hourly saves</td><td>Max depth is the max of saved snapshots</td><td><span class="pill limit">known</span></td></tr>
-      <tr><td>Velocity from water-surface slope</td><td>Indicative, not solver output</td><td><span class="pill limit">labeled</span></td></tr>
-    </tbody></table></div>
-</section>
-
-<section id="repro">
-  <div class="sec-head"><p class="eyebrow">Reproduce</p><h2>Run it locally</h2></div>
-<pre class="code"><code>git clone https://github.com/RobertLesoski/bg-flood-map.git
-cd bg-flood-map
-pip install rasterio geopandas shapely numpy requests
-python fetch_fema.py          # FEMA NFHL zones
-python osm_roads.py           # roads + buildings (needs Geofabrik Kentucky .pbf)
-python step3_data_integration.py
-python -m http.server 8000    # open http://localhost:8000/viewer.html</code></pre>
-  <p class="muted">HPC outputs are excluded from the repo because of size (about 7 GB of viewer data); the docs describe how to rebuild them on a Slurm system.</p>
-</section>
-
-</div>
-</div>
 </main>
 
-<footer class="site-footer"><div class="wrap">
-  <p>© <span id="yr">2026</span> Robert G. Lesoski · Western Kentucky University</p>
-  <p>Research prototype; not for operational or safety use. <a href="emergency-management.html">Path to emergency-management use →</a></p>
-</div></footer>
+<footer class="site-footer">
+  <div class="wrap">
+    <p>© <span id="yr">2026</span> Robert G. Lesoski · Western Kentucky University</p>
+    <p>Terrain: USGS 3DEP and KyFromAbove. Contains data © OpenStreetMap contributors. <a href="index.html#credits">Image credits</a> · Research prototypes; not for operational or safety use. Site built with <a href="https://claude.com/claude-code" rel="noopener">Claude Code</a>.</p>
+  </div>
+</footer>
+
 <script src="assets/js/site.js"></script>
-<script src="assets/js/tools.js"></script>
 </body>
 </html>
